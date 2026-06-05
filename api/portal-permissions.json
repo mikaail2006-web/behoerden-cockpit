@@ -1,0 +1,139 @@
+{
+  "roles": ["admin", "bearbeiter", "kunde"],
+  "permissions": {
+    "documents.upload": {
+      "label": "Dokumente hochladen",
+      "admin": true,
+      "bearbeiter": true,
+      "kunde": true
+    },
+    "deadlines.edit": {
+      "label": "Fristen bearbeiten",
+      "admin": true,
+      "bearbeiter": true,
+      "kunde": false
+    },
+    "contacts.edit": {
+      "label": "Kontakte und Behoerden pflegen",
+      "admin": true,
+      "bearbeiter": true,
+      "kunde": false
+    },
+    "automations.edit": {
+      "label": "Automationen aendern",
+      "admin": true,
+      "bearbeiter": false,
+      "kunde": false
+    },
+    "tasks.view_own": {
+      "label": "Eigene Aufgaben sehen",
+      "admin": true,
+      "bearbeiter": true,
+      "kunde": true
+    },
+    "audit.view": {
+      "label": "Aktivitaeten laden",
+      "admin": true,
+      "bearbeiter": true,
+      "kunde": false
+    },
+    "cases.edit": {
+      "label": "Vorgaenge bearbeiten",
+      "admin": true,
+      "bearbeiter": true,
+      "kunde": false
+    },
+    "messages.send": {
+      "label": "Sichere Nachrichten senden",
+      "admin": true,
+      "bearbeiter": true,
+      "kunde": true
+    }
+  },
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/me",
+      "roles": ["admin", "bearbeiter", "kunde"],
+      "permission": "profile.view_self"
+    },
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "roles": ["admin", "bearbeiter", "kunde"],
+      "permission": "system.health"
+    },
+    {
+      "method": "GET",
+      "path": "/api/permissions",
+      "roles": ["admin", "bearbeiter"],
+      "permission": "permissions.view"
+    },
+    {
+      "method": "GET",
+      "path": "/api/cases",
+      "roles": ["admin", "bearbeiter", "kunde"],
+      "permission": "cases.view"
+    },
+    {
+      "method": "POST",
+      "path": "/api/cases",
+      "roles": ["admin", "bearbeiter"],
+      "permission": "cases.edit"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/cases/:id",
+      "roles": ["admin", "bearbeiter"],
+      "permission": "cases.edit"
+    },
+    {
+      "method": "GET",
+      "path": "/api/documents",
+      "roles": ["admin", "bearbeiter", "kunde"],
+      "permission": "documents.view"
+    },
+    {
+      "method": "POST",
+      "path": "/api/documents/upload",
+      "roles": ["admin", "bearbeiter", "kunde"],
+      "permission": "documents.upload"
+    },
+    {
+      "method": "GET",
+      "path": "/api/deadlines",
+      "roles": ["admin", "bearbeiter", "kunde"],
+      "permission": "deadlines.view"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/deadlines/:id",
+      "roles": ["admin", "bearbeiter"],
+      "permission": "deadlines.edit"
+    },
+    {
+      "method": "GET",
+      "path": "/api/tasks",
+      "roles": ["admin", "bearbeiter", "kunde"],
+      "permission": "tasks.view_own"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/tasks/:id",
+      "roles": ["admin", "bearbeiter", "kunde"],
+      "permission": "tasks.update_own"
+    },
+    {
+      "method": "POST",
+      "path": "/api/messages",
+      "roles": ["admin", "bearbeiter", "kunde"],
+      "permission": "messages.send"
+    },
+    {
+      "method": "GET",
+      "path": "/api/audit-log",
+      "roles": ["admin", "bearbeiter"],
+      "permission": "audit.view"
+    }
+  ]
+}

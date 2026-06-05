@@ -1,0 +1,156 @@
+{
+  "name": "Behoerden-Cockpit",
+  "owner": "Murat Kocyigit",
+  "status": "testbetrieb-unkritisch-bestanden",
+  "lastUpdated": "2026-06-02",
+  "entrypoints": {
+    "app": "Start-Behörden-Cockpit.command",
+    "today": "Heute-Starten.command",
+    "check": "Check-Behörden-Cockpit.command",
+    "status": "Status-Behörden-Cockpit.command",
+    "preflightEchteDaten": "Preflight-Echte-Daten.command",
+    "supabaseSetup": "Start-Supabase-Vorbereitung.command",
+    "supabaseCopy": "Copy-Supabase-Setup.command",
+    "supabaseProfiles": "Copy-Supabase-Testprofile.command",
+    "supabaseTestdata": "Copy-Supabase-Testdaten.command",
+    "supabaseRlsTest": "Copy-Supabase-RLS-Test.command",
+    "supabaseCleanup": "Copy-Supabase-Cleanup.command",
+    "portalEnv": "Copy-Portal-Env.command",
+    "portalEnvCheck": "Check-Portal-Env.command",
+    "portalDemo": "Start-Portal-Demo.command",
+    "portalDemoSupabase": "Start-Portal-Demo-Supabase.command",
+    "portalDemoCheck": "Check-Portal-Demo.command",
+    "portalBearerCheck": "Check-Portal-Bearer.command",
+    "supabaseAccessToken": "Copy-Supabase-Access-Token.command"
+  },
+  "runtimeServices": [
+    {
+      "name": "App",
+      "port": 4173,
+      "url": "http://127.0.0.1:4173/index.html"
+    },
+    {
+      "name": "Upload-Bruecke",
+      "port": 4180,
+      "url": "http://127.0.0.1:4180/document-check"
+    },
+    {
+      "name": "Portal-Demo",
+      "port": 4190,
+      "url": "http://127.0.0.1:4190/api/health"
+    }
+  ],
+  "coreDocs": [
+    "docs/projektindex.md",
+    "docs/ampelstatus.md",
+    "docs/faq.md",
+    "docs/heute-starten.md",
+    "docs/heute-tun.md",
+    "docs/kommunikationsvorlagen.md",
+    "docs/dokumenten-checklisten.md",
+    "docs/kurzanleitung.md",
+    "docs/naechste-schritte.md",
+    "docs/unkritischer-upload-test.md",
+    "docs/echte-daten-starten.md",
+    "docs/security-status.md",
+    "docs/production-readiness.md",
+    "docs/fertigstellung.md",
+    "docs/pilotplan.md",
+    "docs/gesamtstatus.md",
+    "docs/abnahmeprotokoll.md",
+    "docs/datenschutz-backup-loeschkonzept.md",
+    "docs/aenderungsverlauf.md",
+    "docs/portal-demo-testen.md",
+    "docs/supabase-copy-paste-reihenfolge.md",
+    "docs/supabase-werte-vorlage.md",
+    "docs/supabase-testprotokoll.md",
+    "docs/portal-api-supabase-anbindung.md",
+    "docs/portal-env-pruefung.md",
+    "docs/live-test-fehlerhilfe.md"
+  ],
+  "portal": {
+    "readme": "api/README.md",
+    "openapi": "api/portal-openapi.yaml",
+    "permissions": "api/portal-permissions.json",
+    "accessHelper": "api/portal-access.mjs",
+    "contextHelper": "api/portal-context.mjs",
+    "supabaseProfileLoader": "api/supabase-profile-loader.mjs",
+    "supabaseRepository": "api/supabase-portal-repository.mjs",
+    "envHelper": "api/portal-env.mjs",
+    "demoServer": "api/portal-server.example.mjs",
+    "demoTestGuide": "docs/portal-demo-testen.md",
+    "supabaseConnectionGuide": "docs/portal-api-supabase-anbindung.md",
+    "envCheckGuide": "docs/portal-env-pruefung.md",
+    "envExample": "api/.env.example"
+  },
+  "supabase": {
+    "readme": "supabase/README.md",
+    "runbook": "docs/supabase-testprojekt-runbook.md",
+    "testProtocol": "docs/supabase-testprotokoll.md",
+    "combinedSetup": "supabase/000_combined_portal_setup.sql",
+    "securityAdvisorFix": "supabase/005_security_advisor_fix.sql",
+    "migrations": [
+      "supabase/001_portal_schema.sql",
+      "supabase/002_storage_policies.sql",
+      "supabase/003_seed_roles_examples.sql"
+    ],
+    "tests": [
+      "supabase/004_rls_test_queries.sql",
+      "supabase/test_profiles_template.sql",
+      "supabase/test_data_template.sql",
+      "supabase/test_data_cleanup.sql"
+    ]
+  },
+  "n8n": {
+    "readme": "n8n/README.md",
+    "workflows": [
+      "n8n/workflow-cockpit-daten-api-import.json",
+      "n8n/workflow-document-check-upload.json",
+      "n8n/workflow-ocr-ki-analyse.json",
+      "n8n/workflow-fristen-whatsapp-erinnerung.json"
+    ]
+  },
+  "google": {
+    "readme": "google-apps-script/README.md",
+    "setupScript": "google-apps-script/setup-behoerden-cockpit.gs",
+    "compactSetupScript": "google-apps-script/setup-compact.gs",
+    "manifest": "google-apps-script/appsscript.json"
+  },
+  "checks": [
+    "scripts/check-cockpit.mjs",
+    "scripts/check-app-content.mjs",
+    "scripts/check-manifest.mjs",
+    "scripts/check-package-scripts.mjs",
+    "scripts/check-docs.mjs",
+    "scripts/check-file-references.mjs",
+    "scripts/check-next-steps.mjs",
+    "scripts/check-supabase-setup.mjs",
+    "scripts/check-secrets.mjs",
+    "api/portal-context.test.mjs",
+    "api/supabase-profile-loader.test.mjs",
+    "api/supabase-portal-repository.test.mjs",
+    "api/portal-server.smoke.test.mjs",
+    "scripts/check-whatsapp-reminders.mjs",
+    "scripts/check-n8n-workflows.mjs",
+    "scripts/preflight-echte-daten.mjs",
+    "scripts/status-cockpit.mjs",
+    "scripts/status-cockpit.test.mjs",
+    "scripts/copy-supabase-setup.sh",
+    "scripts/copy-supabase-testprofiles.sh",
+    "scripts/copy-supabase-testdata.sh",
+    "scripts/copy-supabase-rls-test.sh",
+    "scripts/copy-supabase-cleanup.sh",
+    "scripts/copy-portal-env-template.sh",
+    "scripts/check-portal-env.sh",
+    "scripts/check-portal-demo.sh",
+    "scripts/check-portal-bearer.sh",
+    "scripts/copy-supabase-access-token.sh",
+    "scripts/start-portal-demo-configured.sh",
+    "scripts/heute-starten.sh",
+    "scripts/start-supabase-vorbereitung.sh"
+  ],
+  "nextSteps": [
+    "WhatsApp produktiv machen",
+    "n8n-KI-Endpunkt produktiv verbinden"
+  ]
+}

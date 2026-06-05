@@ -1,0 +1,122 @@
+{
+  "project": "Behoerden-Cockpit",
+  "version": "0.1.0",
+  "workflows": [
+    {
+      "name": "Drive Dokumenteingang analysieren",
+      "trigger": "Google Drive: new file in */01_Eingang",
+      "steps": [
+        "Read file metadata",
+        "Extract text with OCR or native PDF parser",
+        "Call AI document classification",
+        "Generate normalized filename",
+        "Rename file in Google Drive",
+        "Append row to Google Sheets Dokumente",
+        "Create or update Vorgaenge row",
+        "Create Fristen rows when deadlines are detected",
+        "Move file to classified folder",
+        "Send WhatsApp notification"
+      ],
+      "required_credentials": [
+        "Google Drive OAuth2",
+        "Google Sheets OAuth2",
+        "AI API Key",
+        "WhatsApp Business API"
+      ]
+    },
+    {
+      "name": "Taegliche Fristenpruefung",
+      "trigger": "Cron daily 08:00 Europe/Berlin",
+      "steps": [
+        "Read Google Sheets Fristen",
+        "Filter open deadlines",
+        "Calculate days remaining",
+        "Set escalation level",
+        "Send reminders at 30, 14, 7, 3, 1 and 0 days",
+        "Send WhatsApp Business message",
+        "Write Audit_Log row"
+      ],
+      "required_credentials": [
+        "Google Sheets OAuth2",
+        "WhatsApp Business API",
+        "Gmail OAuth2"
+      ]
+    },
+    {
+      "name": "Portal Upload verarbeiten",
+      "trigger": "Webhook POST /portal/upload",
+      "steps": [
+        "Validate portal user",
+        "Store file in Google Drive Eingang",
+        "Create Dokumente row",
+        "Queue AI analysis",
+        "Return upload status"
+      ],
+      "required_credentials": [
+        "Webhook secret",
+        "Google Drive OAuth2",
+        "Google Sheets OAuth2"
+      ]
+    },
+    {
+      "name": "Cockpit Daten-API",
+      "trigger": "Webhook GET /behoerden-cockpit-data",
+      "steps": [
+        "Read Google Sheets Vorgaenge",
+        "Read Google Sheets Dokumente",
+        "Read Google Sheets Fristen",
+        "Read Google Sheets Automationen",
+        "Read Google Sheets KI_Analysen",
+        "Map sheet rows to cockpit-data.json structure",
+        "Respond with JSON for the web app"
+      ],
+      "required_credentials": [
+        "Google Sheets OAuth2"
+      ]
+    },
+    {
+      "name": "Bescheid-Check und Dokumenten-Upload",
+      "trigger": "Webhook POST /document-check",
+      "steps": [
+        "Receive uploaded document and selected area",
+        "Store file in Google Drive 01_Eingang",
+        "Extract text from PDF image or text file",
+        "Call AI document analysis",
+        "Generate normalized filename",
+        "Rename file in Google Drive",
+        "Create Dokumente row",
+        "Create Fristen row when deadline is detected",
+        "Create Aufgaben row for missing evidence or next step",
+        "Create KI_Analysen row",
+        "Create Audit_Log row",
+        "Respond with structured check result"
+      ],
+      "required_credentials": [
+        "Webhook secret",
+        "Google Drive OAuth2",
+        "Google Sheets OAuth2",
+        "AI API Key"
+      ]
+    },
+    {
+      "name": "OCR und KI Dokumentenanalyse",
+      "trigger": "Webhook POST /document-analysis",
+      "steps": [
+        "Receive document metadata and OCR text",
+        "Build German authority-analysis prompt",
+        "Call AI analysis endpoint",
+        "Normalize JSON response",
+        "Create KI_Analysen row",
+        "Create Fristen row when a deadline is detected",
+        "Create Aufgaben row for missing evidence or next step",
+        "Respond with structured analysis result"
+      ],
+      "required_credentials": [
+        "Webhook secret",
+        "Google Sheets OAuth2",
+        "AI API Key",
+        "OCR provider when text is not already available"
+      ]
+    }
+  ]
+}

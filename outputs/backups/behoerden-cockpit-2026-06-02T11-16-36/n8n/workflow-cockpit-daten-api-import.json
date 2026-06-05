@@ -1,0 +1,181 @@
+{
+  "name": "Behörden-Cockpit Daten-API",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "behoerden-cockpit-data",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "webhook-cockpit-data",
+      "name": "GET Cockpit Daten",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        280
+      ],
+      "webhookId": "behoerden-cockpit-data"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  { json: { sheetName: 'Vorgaenge' } },\n  { json: { sheetName: 'Dokumente' } },\n  { json: { sheetName: 'Fristen' } },\n  { json: { sheetName: 'Checklisten' } },\n  { json: { sheetName: 'Kontakte' } },\n  { json: { sheetName: 'Aufgaben' } },\n  { json: { sheetName: 'Audit_Log' } },\n  { json: { sheetName: 'Automationen' } },\n  { json: { sheetName: 'KI_Analysen' } }\n];"
+      },
+      "id": "sheet-list",
+      "name": "Sheet Tabs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1FEnhO0S8fZzzoEKbXVLyX6mn6Su25GIZ4bJbtwd3eks",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $json.sheetName }}",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "read-google-sheets",
+      "name": "Google Sheets lesen",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        700,
+        280
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const sourceSheet = $('Sheet Tabs').item.json.sheetName;\nreturn items.map((item) => ({\n  json: {\n    ...item.json,\n    sheetName: sourceSheet\n  }\n}));"
+      },
+      "id": "tag-sheet-name",
+      "name": "Tabnamen ergänzen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rowsBySheet = {};\n\nfor (const item of items) {\n  const sheetName = item.json.sheetName || item.json.tab || item.json.source || \"unknown\";\n  rowsBySheet[sheetName] = rowsBySheet[sheetName] || [];\n  rowsBySheet[sheetName].push(item.json);\n}\n\nconst areas = [\n  \"EM-Rente\",\n  \"Pflegegrad 2\",\n  \"GdB 100\",\n  \"Wohngeld\",\n  \"Kinderzuschlag\",\n  \"Krankenkasse\",\n  \"Arztberichte\",\n  \"Parkerleichterungen\",\n  \"Selbstständigkeit\",\n  \"Steuern\"\n];\n\nconst cases = (rowsBySheet.Vorgaenge || []).map((row) => ({\n  id: row.vorgang_id,\n  area: row.bereich,\n  authority: row.behoerde,\n  status: row.status,\n  priority: row.prioritaet,\n  next: row.naechster_schritt,\n  progress: Number(row.fortschritt || 0)\n}));\n\nconst documents = (rowsBySheet.Dokumente || []).map((row) => ({\n  id: row.dokument_id,\n  name: row.dateiname,\n  area: row.bereich,\n  type: row.dokumenttyp,\n  status: row.ki_status,\n  date: row.eingangsdatum,\n  driveUrl: row.drive_url\n}));\n\nfunction deadlineEscalation(row) {\n  if (row.eskalation) return row.eskalation;\n  const dateValue = row.Fristdatum || row.fristdatum;\n  if (!dateValue) return \"ok\";\n  const today = new Date();\n  today.setHours(0, 0, 0, 0);\n  const deadline = new Date(`${dateValue}T00:00:00`);\n  const days = Math.ceil((deadline - today) / 86400000);\n  if (days <= 3) return \"critical\";\n  if (days <= Number(row.ErinnerungsTage || 7)) return \"soon\";\n  return \"ok\";\n}\n\nconst deadlines = (rowsBySheet.Fristen || [])\n  .map((row, index) => {\n    const date = row.Fristdatum || row.fristdatum;\n    const caseId = row.VorgangsID || row.vorgang_id || \"\";\n    return {\n      id: row.frist_id || `F-${caseId || index + 1}-${date || \"offen\"}`,\n      caseId,\n      title: row.Fristtitel || row.titel || \"Frist prüfen\",\n      area: row.Bereich || row.bereich || \"\",\n      date,\n      escalation: deadlineEscalation(row),\n      done: String(row.Status || row.status || \"\").toLowerCase() === \"erledigt\",\n      authority: row.BehoerdeName || \"\",\n      phone: row.Telefon || \"\",\n      email: row.Email || \"\",\n      nextStep: row.NaechsterSchritt || \"\",\n      lastReminder: row.LetzteErinnerung || \"\"\n    };\n  })\n  .filter((row) => row.date);\n\nconst checklists = (rowsBySheet.Checklisten || []).map((row) => ({\n  id: row.checklist_id,\n  area: row.bereich,\n  title: row.titel,\n  description: row.beschreibung,\n  done: row.status === \"Erledigt\"\n}));\n\nconst tasks = (rowsBySheet.Aufgaben || []).map((row) => ({\n  id: row.aufgabe_id,\n  caseId: row.vorgang_id,\n  title: row.titel,\n  area: row.bereich,\n  dueDate: row.faelligkeit,\n  priority: row.prioritaet,\n  done: row.status === \"Erledigt\"\n}));\n\nconst contacts = (rowsBySheet.Kontakte || []).map((row) => ({\n  id: row.kontakt_id,\n  organization: row.organisation,\n  name: row.ansprechpartner,\n  area: row.bereich,\n  type: row.typ,\n  email: row.email,\n  phone: row.telefon\n}));\n\nconst auditLog = (rowsBySheet.Audit_Log || []).map((row) => ({\n  id: row.log_id,\n  timestamp: row.zeitpunkt,\n  action: row.aktion,\n  object: row.objekt,\n  area: row.bereich,\n  details: row.details,\n  source: row.quelle,\n  level: row.level\n}));\n\nconst automations = (rowsBySheet.Automationen || []).map((row) => ({\n  name: row.name,\n  status: row.status,\n  description: row.beschreibung,\n  lastRun: row.last_run\n}));\n\nconst analyses = (rowsBySheet.KI_Analysen || []).map((row) => ({\n  documentName: row.dokument_name,\n  summary: row.zusammenfassung,\n  risk: row.risiko,\n  nextStep: row.naechster_schritt\n}));\n\nreturn [\n  {\n    json: {\n      areas,\n      cases,\n      documents,\n      deadlines,\n      checklists,\n      tasks,\n      contacts,\n      auditLog,\n      automations,\n      analyses\n    }\n  }\n];\n"
+      },
+      "id": "map-to-cockpit-json",
+      "name": "In Cockpit JSON mappen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1180,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              }
+            ]
+          }
+        }
+      },
+      "id": "respond-json",
+      "name": "JSON antworten",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1400,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "GET Cockpit Daten": {
+      "main": [
+        [
+          {
+            "node": "Sheet Tabs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheet Tabs": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets lesen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets lesen": {
+      "main": [
+        [
+          {
+            "node": "Tabnamen ergänzen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tabnamen ergänzen": {
+      "main": [
+        [
+          {
+            "node": "In Cockpit JSON mappen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "In Cockpit JSON mappen": {
+      "main": [
+        [
+          {
+            "node": "JSON antworten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "versionId": "behoerden-cockpit-data-api-001",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}

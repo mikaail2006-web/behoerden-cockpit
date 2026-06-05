@@ -1,0 +1,416 @@
+openapi: 3.1.0
+info:
+  title: Behoerden-Cockpit Portal API
+  version: 0.1.0
+  description: Geschuetzte API fuer Portal, Kundenansicht und spaetere SaaS-Erweiterung.
+servers:
+  - url: https://app.example.de
+    description: Produktion
+  - url: http://127.0.0.1:4173
+    description: Lokale Entwicklung
+security:
+  - supabaseAuth: []
+tags:
+  - name: Auth
+  - name: Vorgaenge
+  - name: Dokumente
+  - name: Fristen
+  - name: Aufgaben
+  - name: Nachrichten
+  - name: Audit
+paths:
+  /api/me:
+    get:
+      tags: [Auth]
+      summary: Aktuelles Profil laden
+      responses:
+        "200":
+          description: Profil, Rolle und Mandant
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+  /api/health:
+    get:
+      tags: [Auth]
+      summary: API-Status pruefen
+      responses:
+        "200":
+          description: Laufzeitstatus der Portal-API
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, mode]
+                properties:
+                  ok:
+                    type: boolean
+                  mode:
+                    type: string
+                    enum: [demo, configured]
+  /api/permissions:
+    get:
+      tags: [Auth]
+      summary: Rollen- und Endpunktmatrix laden
+      description: Erlaubt fuer admin und bearbeiter.
+      responses:
+        "200":
+          description: Rollen- und Endpunktfreigaben
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/cases:
+    get:
+      tags: [Vorgaenge]
+      summary: Vorgangsliste fuer den eigenen Mandanten laden
+      responses:
+        "200":
+          description: Liste der sichtbaren Vorgaenge
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Case"
+    post:
+      tags: [Vorgaenge]
+      summary: Vorgang anlegen
+      description: Erlaubt fuer admin und bearbeiter.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaseInput"
+      responses:
+        "201":
+          description: Vorgang angelegt
+  /api/cases/{id}:
+    patch:
+      tags: [Vorgaenge]
+      summary: Vorgang aktualisieren
+      description: Erlaubt fuer admin und bearbeiter.
+      parameters:
+        - $ref: "#/components/parameters/UuidPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaseInput"
+      responses:
+        "200":
+          description: Vorgang aktualisiert
+  /api/documents:
+    get:
+      tags: [Dokumente]
+      summary: Dokumentliste fuer den eigenen Mandanten laden
+      responses:
+        "200":
+          description: Liste der sichtbaren Dokumente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+  /api/documents/upload:
+    post:
+      tags: [Dokumente]
+      summary: Datei hochladen und Analyse anstossen
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, area, documentType]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                area:
+                  type: string
+                documentType:
+                  type: string
+                caseId:
+                  type: string
+                  format: uuid
+      responses:
+        "202":
+          description: Upload angenommen und Verarbeitung gestartet
+  /api/deadlines:
+    get:
+      tags: [Fristen]
+      summary: Fristen fuer den eigenen Mandanten laden
+      responses:
+        "200":
+          description: Fristenliste
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Deadline"
+  /api/deadlines/{id}:
+    patch:
+      tags: [Fristen]
+      summary: Frist aktualisieren
+      description: Erlaubt fuer admin und bearbeiter.
+      parameters:
+        - $ref: "#/components/parameters/UuidPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeadlineInput"
+      responses:
+        "200":
+          description: Frist aktualisiert
+  /api/tasks:
+    get:
+      tags: [Aufgaben]
+      summary: Aufgaben fuer den eigenen Mandanten laden
+      responses:
+        "200":
+          description: Aufgabenliste
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+  /api/tasks/{id}:
+    patch:
+      tags: [Aufgaben]
+      summary: Aufgabe aktualisieren
+      parameters:
+        - $ref: "#/components/parameters/UuidPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskInput"
+      responses:
+        "200":
+          description: Aufgabe aktualisiert
+  /api/messages:
+    post:
+      tags: [Nachrichten]
+      summary: Sichere Portalnachricht senden
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, message]
+              properties:
+                subject:
+                  type: string
+                message:
+                  type: string
+                caseId:
+                  type: string
+                  format: uuid
+      responses:
+        "201":
+          description: Nachricht gespeichert
+  /api/audit-log:
+    get:
+      tags: [Audit]
+      summary: Aktivitaeten laden
+      description: Erlaubt fuer admin und bearbeiter.
+      responses:
+        "200":
+          description: Audit-Eintraege
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AuditLog"
+components:
+  securitySchemes:
+    supabaseAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    UuidPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  schemas:
+    Profile:
+      type: object
+      required: [id, tenantId, fullName, role]
+      properties:
+        id:
+          type: string
+          format: uuid
+        tenantId:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        role:
+          type: string
+          enum: [admin, bearbeiter, kunde]
+    Case:
+      type: object
+      required: [id, area, status, priority, progress]
+      properties:
+        id:
+          type: string
+          format: uuid
+        area:
+          type: string
+        authority:
+          type: string
+        status:
+          type: string
+        priority:
+          type: string
+        nextStep:
+          type: string
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+    CaseInput:
+      type: object
+      required: [area]
+      properties:
+        area:
+          type: string
+        authority:
+          type: string
+        status:
+          type: string
+        priority:
+          type: string
+        nextStep:
+          type: string
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+    Document:
+      type: object
+      required: [id, name, area, analysisStatus]
+      properties:
+        id:
+          type: string
+          format: uuid
+        caseId:
+          type: string
+          format: uuid
+        name:
+          type: string
+        area:
+          type: string
+        documentType:
+          type: string
+        driveUrl:
+          type: string
+          format: uri
+        analysisStatus:
+          type: string
+    Deadline:
+      type: object
+      required: [id, title, area, dueDate, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        caseId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        area:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        reminderDays:
+          type: integer
+        status:
+          type: string
+        nextStep:
+          type: string
+    DeadlineInput:
+      type: object
+      properties:
+        title:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        reminderDays:
+          type: integer
+        status:
+          type: string
+        nextStep:
+          type: string
+    Task:
+      type: object
+      required: [id, title, area, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        caseId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        area:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        priority:
+          type: string
+        status:
+          type: string
+    TaskInput:
+      type: object
+      properties:
+        title:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        priority:
+          type: string
+        status:
+          type: string
+    AuditLog:
+      type: object
+      required: [id, action, objectType, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        action:
+          type: string
+        objectType:
+          type: string
+        objectId:
+          type: string
+          format: uuid
+        area:
+          type: string
+        details:
+          type: string
+        createdAt:
+          type: string
+          format: date-time

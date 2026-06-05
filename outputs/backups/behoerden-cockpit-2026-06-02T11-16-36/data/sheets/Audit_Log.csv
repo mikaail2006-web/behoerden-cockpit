@@ -1,0 +1,4 @@
+log_id,zeitpunkt,aktion,objekt,bereich,details,quelle,level
+LOG-001,2026-05-31 08:14,Dokument analysiert,DOC-001,EM-Rente,DRV_Bescheid_EM_Rente.pdf wurde klassifiziert und als analysiert markiert.,KI,info
+LOG-002,2026-05-31 08:00,Fristenprüfung ausgeführt,Fristen,Alle Bereiche,Tägliche Prüfung fand eine kritische Frist innerhalb von 14 Tagen.,n8n,warning
+LOG-003,2026-05-30 18:20,Kontakt angelegt,K-003,Arztberichte,Neurologische Praxis wurde als medizinischer Kontakt hinterlegt.,App,info

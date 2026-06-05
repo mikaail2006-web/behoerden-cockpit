@@ -1,0 +1,13 @@
+wert,quelle,ziel,platzhalter,hinweis
+spreadsheet_id,Config,alle n8n Google-Sheets-Nodes,GOOGLE_SHEET_ID_HERE,Aus Config kopieren
+n8n_data_api_url,Config,App Setup Daten-URL,https://DEINE-N8N-DOMAIN/webhook/behoerden-cockpit-data,Nach Import des Daten-API-Workflows setzen
+n8n_document_check_url,Config,App Setup Upload-Webhook,https://DEINE-N8N-DOMAIN/webhook/document-check,Nach Import des Upload-Workflows setzen
+n8n_document_analysis_url,Config,n8n Analyse-Anschluss,https://DEINE-N8N-DOMAIN/webhook/document-analysis,Optional fuer KI-Analyse
+whatsapp_template_name,Config,WhatsApp Workflow,frist_erinnerung_de,In Meta als Template freigeben
+whatsapp_recipient_phone,Config,WhatsApp Workflow,WHATSAPP_RECIPIENT_PHONE_HERE,Internationales Format ohne Plus
+01_Eingang Ordner-ID,Drive_Ordner,Upload Workflow,GOOGLE_DRIVE_EINGANG_FOLDER_ID_HERE,Erster Test z. B. 01_EM-Rente/01_Eingang
+Google Sheets Credential,n8n Credentials,n8n Google-Sheets-Nodes,REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID,In n8n anlegen
+Google Drive Credential,n8n Credentials,n8n Drive-Node,REPLACE_WITH_GOOGLE_DRIVE_CREDENTIAL_ID,In n8n anlegen
+AI API Credential,n8n Credentials,KI Workflow,REPLACE_WITH_AI_API_CREDENTIAL_ID,In n8n anlegen
+WhatsApp Credential,n8n Credentials,WhatsApp Workflow,REPLACE_WITH_WHATSAPP_CREDENTIAL_ID,In n8n anlegen
+WhatsApp Phone Number ID,Meta Business,WhatsApp Workflow,WHATSAPP_PHONE_NUMBER_ID,Aus Meta Developer Portal

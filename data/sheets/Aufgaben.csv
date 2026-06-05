@@ -1,0 +1,4 @@
+aufgabe_id,vorgang_id,titel,bereich,faelligkeit,prioritaet,status
+A-001,EMR-2026-001,Arztberichte für EM-Rente zusammenstellen,EM-Rente,2026-06-05,high,Offen
+A-002,WG-2026-004,Einkommensnachweise für Wohngeld prüfen,Wohngeld,2026-06-10,medium,Offen
+A-003,PG-2026-002,MD-Gutachten im Drive ablegen,Pflegegrad 2,2026-06-03,medium,Erledigt

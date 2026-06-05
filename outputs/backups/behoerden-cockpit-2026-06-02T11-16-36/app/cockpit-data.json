@@ -1,0 +1,279 @@
+{
+  "areas": [
+    "EM-Rente",
+    "Pflegegrad 2",
+    "GdB 100",
+    "Wohngeld",
+    "Kinderzuschlag",
+    "Krankenkasse",
+    "Arztberichte",
+    "Parkerleichterungen",
+    "Selbstständigkeit",
+    "Steuern"
+  ],
+  "cases": [
+    {
+      "id": "EMR-2026-001",
+      "area": "EM-Rente",
+      "authority": "Deutsche Rentenversicherung",
+      "status": "In Bearbeitung",
+      "priority": "critical",
+      "next": "Ärztliche Unterlagen prüfen und Nachweislisten abgleichen",
+      "progress": 62
+    },
+    {
+      "id": "PG-2026-002",
+      "area": "Pflegegrad 2",
+      "authority": "Pflegekasse",
+      "status": "Wartet",
+      "priority": "high",
+      "next": "MD-Gutachten im Drive ablegen",
+      "progress": 74
+    },
+    {
+      "id": "GDB-2026-003",
+      "area": "GdB 100",
+      "authority": "Versorgungsamt",
+      "status": "Offen",
+      "priority": "medium",
+      "next": "Bescheid prüfen, Merkzeichen kontrollieren",
+      "progress": 48
+    },
+    {
+      "id": "WG-2026-004",
+      "area": "Wohngeld",
+      "authority": "Wohngeldstelle",
+      "status": "Offen",
+      "priority": "medium",
+      "next": "Einkommensnachweise ergänzen",
+      "progress": 35
+    },
+    {
+      "id": "KK-2026-005",
+      "area": "Krankenkasse",
+      "authority": "Krankenkasse",
+      "status": "In Bearbeitung",
+      "priority": "low",
+      "next": "Antwortfrist beobachten",
+      "progress": 58
+    }
+  ],
+  "documents": [
+    {
+      "id": "DOC-001",
+      "name": "DRV_Bescheid_EM_Rente.pdf",
+      "area": "EM-Rente",
+      "type": "Bescheid",
+      "status": "Analysiert",
+      "date": "2026-05-24"
+    },
+    {
+      "id": "DOC-002",
+      "name": "MD_Gutachten_Pflegegrad.pdf",
+      "area": "Pflegegrad 2",
+      "type": "Gutachten",
+      "status": "Analysiert",
+      "date": "2026-05-26"
+    },
+    {
+      "id": "DOC-003",
+      "name": "Wohngeld_Nachweise.zip",
+      "area": "Wohngeld",
+      "type": "Nachweis",
+      "status": "Nicht analysiert",
+      "date": "2026-05-28"
+    },
+    {
+      "id": "DOC-004",
+      "name": "Arztbericht_Neurologie.pdf",
+      "area": "Arztberichte",
+      "type": "Arztbericht",
+      "status": "In Analyse",
+      "date": "2026-05-30"
+    }
+  ],
+  "deadlines": [
+    {
+      "id": "F-001",
+      "caseId": "EMR-2026-001",
+      "title": "Widerspruchsfrist EM-Rente prüfen",
+      "area": "EM-Rente",
+      "date": "2026-06-12",
+      "escalation": "critical",
+      "done": false
+    },
+    {
+      "id": "F-002",
+      "caseId": "WG-2026-004",
+      "title": "Wohngeld Nachweise einreichen",
+      "area": "Wohngeld",
+      "date": "2026-06-18",
+      "escalation": "soon",
+      "done": false
+    },
+    {
+      "id": "F-003",
+      "caseId": "GDB-2026-003",
+      "title": "GdB Bescheid kontrollieren",
+      "area": "GdB 100",
+      "date": "2026-07-02",
+      "escalation": "ok",
+      "done": false
+    }
+  ],
+  "checklists": [
+    {
+      "id": "CL-001",
+      "area": "EM-Rente",
+      "title": "Aktuelle Arztberichte",
+      "description": "Neurologie, Orthopädie und Hausarztberichte sammeln",
+      "done": false
+    },
+    {
+      "id": "CL-002",
+      "area": "EM-Rente",
+      "title": "Versicherungsverlauf prüfen",
+      "description": "DRV-Verlauf und Lücken kontrollieren",
+      "done": false
+    },
+    {
+      "id": "CL-003",
+      "area": "Pflegegrad 2",
+      "title": "Pflegetagebuch",
+      "description": "Hilfebedarf im Alltag dokumentieren",
+      "done": true
+    },
+    {
+      "id": "CL-004",
+      "area": "Wohngeld",
+      "title": "Mietnachweis",
+      "description": "Mietvertrag und aktuelle Miethöhe bereitlegen",
+      "done": false
+    },
+    {
+      "id": "CL-005",
+      "area": "Kinderzuschlag",
+      "title": "Einkommensnachweise",
+      "description": "Einnahmen, Kindergeld und Mietkosten prüfen",
+      "done": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": "A-001",
+      "caseId": "EMR-2026-001",
+      "title": "Arztberichte für EM-Rente zusammenstellen",
+      "area": "EM-Rente",
+      "dueDate": "2026-06-05",
+      "priority": "high",
+      "done": false
+    },
+    {
+      "id": "A-002",
+      "caseId": "WG-2026-004",
+      "title": "Einkommensnachweise für Wohngeld prüfen",
+      "area": "Wohngeld",
+      "dueDate": "2026-06-10",
+      "priority": "medium",
+      "done": false
+    },
+    {
+      "id": "A-003",
+      "caseId": "PG-2026-002",
+      "title": "MD-Gutachten im Drive ablegen",
+      "area": "Pflegegrad 2",
+      "dueDate": "2026-06-03",
+      "priority": "medium",
+      "done": true
+    }
+  ],
+  "contacts": [
+    {
+      "id": "K-001",
+      "organization": "Deutsche Rentenversicherung",
+      "name": "Sachbearbeitung EM-Rente",
+      "area": "EM-Rente",
+      "type": "Behörde",
+      "email": "kontakt@drv.example",
+      "phone": "0800 1000 4800"
+    },
+    {
+      "id": "K-002",
+      "organization": "Pflegekasse",
+      "name": "Leistungsabteilung Pflege",
+      "area": "Pflegegrad 2",
+      "type": "Kasse",
+      "email": "pflegekasse@example.de",
+      "phone": ""
+    },
+    {
+      "id": "K-003",
+      "organization": "Neurologische Praxis",
+      "name": "Praxis-Team",
+      "area": "Arztberichte",
+      "type": "Praxis",
+      "email": "praxis@example.de",
+      "phone": "0211 000000"
+    }
+  ],
+  "auditLog": [
+    {
+      "id": "LOG-001",
+      "timestamp": "2026-05-31 08:14",
+      "action": "Dokument analysiert",
+      "object": "DOC-001",
+      "area": "EM-Rente",
+      "details": "DRV_Bescheid_EM_Rente.pdf wurde klassifiziert und als analysiert markiert.",
+      "source": "KI",
+      "level": "info"
+    },
+    {
+      "id": "LOG-002",
+      "timestamp": "2026-05-31 08:00",
+      "action": "Fristenprüfung ausgeführt",
+      "object": "Fristen",
+      "area": "Alle Bereiche",
+      "details": "Tägliche Prüfung fand eine kritische Frist innerhalb von 14 Tagen.",
+      "source": "n8n",
+      "level": "warning"
+    },
+    {
+      "id": "LOG-003",
+      "timestamp": "2026-05-30 18:20",
+      "action": "Kontakt angelegt",
+      "object": "K-003",
+      "area": "Arztberichte",
+      "details": "Neurologische Praxis wurde als medizinischer Kontakt hinterlegt.",
+      "source": "App",
+      "level": "info"
+    }
+  ],
+  "automations": [
+    {
+      "name": "Drive Dokumenteingang",
+      "status": "active",
+      "description": "Neue Dateien klassifizieren, analysieren und in den richtigen Ordner verschieben.",
+      "lastRun": "Heute 08:14"
+    },
+    {
+      "name": "Tägliche Fristenprüfung",
+      "status": "active",
+      "description": "Offene Fristen aus Google Sheets prüfen und Erinnerungen versenden.",
+      "lastRun": "Heute 08:00"
+    },
+    {
+      "name": "Portal Upload",
+      "status": "info",
+      "description": "Uploads aus dem Kundenportal als Drive-Eingang erfassen.",
+      "lastRun": "Bereit"
+    }
+  ],
+  "analyses": [
+    {
+      "documentName": "DRV_Bescheid_EM_Rente.pdf",
+      "summary": "Erkannt wurden ein Bescheid zur EM-Rente, eine mögliche Widerspruchsfrist und fehlende medizinische Anlagen.",
+      "risk": "mittel",
+      "nextStep": "Arztberichte aus Neurologie und Orthopädie mit dem Bescheid verknüpfen, danach Fristentscheidung treffen."
+    }
+  ]
+}

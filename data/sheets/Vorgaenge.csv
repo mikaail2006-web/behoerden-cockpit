@@ -1,0 +1,6 @@
+vorgang_id,bereich,status,prioritaet,behoerde,aktenzeichen,startdatum,naechster_schritt,fortschritt
+EMR-2026-001,EM-Rente,In Bearbeitung,critical,Deutsche Rentenversicherung,,2026-05-01,Ärztliche Unterlagen prüfen und Nachweislisten abgleichen,62
+PG-2026-002,Pflegegrad 2,Wartet,high,Pflegekasse,,2026-05-04,MD-Gutachten im Drive ablegen,74
+GDB-2026-003,GdB 100,Offen,medium,Versorgungsamt,,2026-05-08,Bescheid prüfen Merkzeichen kontrollieren,48
+WG-2026-004,Wohngeld,Offen,medium,Wohngeldstelle,,2026-05-11,Einkommensnachweise ergänzen,35
+KK-2026-005,Krankenkasse,In Bearbeitung,low,Krankenkasse,,2026-05-18,Antwortfrist beobachten,58

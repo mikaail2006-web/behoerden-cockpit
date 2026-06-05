@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BUNDLED_NODE="/Users/muratkocyigit/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node"
+
+cd "$ROOT_DIR"
+
+if command -v node >/dev/null 2>&1; then
+  NODE_BIN="$(command -v node)"
+elif [[ -x "$BUNDLED_NODE" ]]; then
+  NODE_BIN="$BUNDLED_NODE"
+else
+  echo "Kein Node.js gefunden."
+  exit 1
+fi
+
+"$NODE_BIN" scripts/status-cockpit.mjs

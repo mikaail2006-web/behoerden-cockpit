@@ -1,0 +1,175 @@
+{
+  "name": "Behörden-Cockpit Dokumenten-Upload",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "document-check",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryData": true
+        }
+      },
+      "id": "webhook-document-check",
+      "name": "Webhook Dokument-Check",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -760,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function sanitizeFilePart(value) {\n  return String(value || '')\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .replace(/ß/g, 'ss')\n    .replace(/[^a-zA-Z0-9]+/g, '-')\n    .replace(/^-+|-+$/g, '')\n    .slice(0, 48);\n}\n\nconst body = $json.body || $json;\nconst originalName = body.originalFileName || body.normalizedFileName || 'Dokument.pdf';\nconst extension = String(originalName).match(/\\.([a-zA-Z0-9]{1,8})$/)?.[0]?.toLowerCase() || '.pdf';\nconst date = new Date().toISOString().slice(0, 10);\nconst area = body.area || 'Unsortiert';\nconst documentType = body.documentType || 'Dokument';\nconst normalizedFileName = body.normalizedFileName || [\n  date,\n  sanitizeFilePart(area),\n  sanitizeFilePart(documentType),\n  'Murat-Kocyigit',\n  sanitizeFilePart(originalName.replace(/\\.[^.]+$/, ''))\n].filter(Boolean).join('_') + extension;\n\nreturn [{\n  json: {\n    area,\n    documentType,\n    normalizedFileName,\n    personName: body.personName || 'Murat Kocyigit',\n    documentId: `DOC-${Date.now()}`,\n    incomingDate: date,\n    sheetId: '1FEnhO0S8fZzzoEKbXVLyX6mn6Su25GIZ4bJbtwd3eks',\n    driveFolderId: 'GOOGLE_DRIVE_EINGANG_FOLDER_ID_HERE'\n  },\n  binary: $binary\n}];"
+      },
+      "id": "prepare-upload-metadata",
+      "name": "Dateinamen vorbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -520,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upload",
+        "binaryData": true,
+        "name": "={{ $json.normalizedFileName }}",
+        "parents": {
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.driveFolderId }}",
+            "mode": "id"
+          }
+        },
+        "options": {}
+      },
+      "id": "upload-to-drive",
+      "name": "Google Drive Upload",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -280,
+        0
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "name": "Google Drive OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1FEnhO0S8fZzzoEKbXVLyX6mn6Su25GIZ4bJbtwd3eks",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Dokumente",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "dokument_id": "={{ $('Dateinamen vorbereiten').item.json.documentId }}",
+            "vorgang_id": "",
+            "bereich": "={{ $('Dateinamen vorbereiten').item.json.area }}",
+            "dateiname": "={{ $('Dateinamen vorbereiten').item.json.normalizedFileName }}",
+            "dokumenttyp": "={{ $('Dateinamen vorbereiten').item.json.documentType }}",
+            "eingangsdatum": "={{ $('Dateinamen vorbereiten').item.json.incomingDate }}",
+            "ki_status": "Nicht analysiert",
+            "drive_url": "={{ $json.webViewLink || $json.webContentLink || $json.id }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "append-document-row",
+      "name": "Dokumente Zeile schreiben",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -40,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  title: $('Dateinamen vorbereiten').item.json.documentType + ' hochgeladen: ' + $('Dateinamen vorbereiten').item.json.normalizedFileName,\n  fileName: $('Dateinamen vorbereiten').item.json.normalizedFileName,\n  risk: 'mittel',\n  summary: 'Das Dokument wurde an n8n übergeben, in Google Drive gespeichert und in Google Sheets eingetragen.',\n  findings: ['Google Drive Upload abgeschlossen', 'Dokumente-Zeile geschrieben', 'KI-Analyse kann als nächster Node ergänzt werden'],\n  nextStep: 'Cockpit-Daten neu laden oder KI-Analyse-Workflow starten.'\n} }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-document-check",
+      "name": "Antwort an Cockpit",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        200,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Dokument-Check": {
+      "main": [
+        [
+          {
+            "node": "Dateinamen vorbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dateinamen vorbereiten": {
+      "main": [
+        [
+          {
+            "node": "Google Drive Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Upload": {
+      "main": [
+        [
+          {
+            "node": "Dokumente Zeile schreiben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dokumente Zeile schreiben": {
+      "main": [
+        [
+          {
+            "node": "Antwort an Cockpit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

@@ -1,0 +1,186 @@
+{
+  "name": "Behörden-Cockpit Fristen WhatsApp Erinnerung",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 8 * * *"
+            }
+          ]
+        }
+      },
+      "id": "schedule-daily-deadlines",
+      "name": "Täglich 08:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -820,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1FEnhO0S8fZzzoEKbXVLyX6mn6Su25GIZ4bJbtwd3eks",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Fristen",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "read-deadlines",
+      "name": "Fristen lesen",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        -580,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "function buildWhatsAppReminders(rows, options = {}) {\n  const defaultReminderDays = new Set([30, 14, 7, 3, 1, 0]);\n  const today = options.today ? new Date(`${options.today}T00:00:00`) : new Date();\n  today.setHours(0, 0, 0, 0);\n  const todayValue = [\n    today.getFullYear(),\n    String(today.getMonth() + 1).padStart(2, \"0\"),\n    String(today.getDate()).padStart(2, \"0\"),\n  ].join(\"-\");\n  const reminders = [];\n\n  function normalizePhone(value) {\n    return String(value || \"\").replace(/[^\\d+]/g, \"\");\n  }\n\n  function validPhone(value) {\n    return /^\\+[1-9]\\d{7,14}$/.test(value);\n  }\n\n  function levelForDays(days) {\n    if (days <= 1) return \"critical\";\n    if (days <= 7) return \"high\";\n    if (days <= 14) return \"medium\";\n    return \"info\";\n  }\n\n  function dayText(days) {\n    if (days < 0) return `seit ${Math.abs(days)} Tag${Math.abs(days) === 1 ? \"\" : \"en\"} überfällig`;\n    if (days === 0) return \"heute\";\n    if (days === 1) return \"morgen\";\n    return `in ${days} Tagen`;\n  }\n\n  function hasOptIn(row) {\n    const raw = row.WhatsAppOptIn ?? row.OptIn ?? row.Einwilligung ?? row.whatsapp_opt_in;\n    if (raw === undefined || raw === \"\") return true;\n    return /^(ja|yes|true|1|ok|opt-in)$/i.test(String(raw).trim());\n  }\n\n  for (const row of rows) {\n    if (String(row.Status || \"\").toLowerCase() === \"erledigt\") continue;\n    if (!row.Fristdatum) continue;\n    if (String(row.LetzteErinnerung || \"\").startsWith(todayValue)) continue;\n    if (!hasOptIn(row)) continue;\n\n    const recipientPhone = normalizePhone(row.Telefon);\n    if (!validPhone(recipientPhone)) continue;\n\n    const reminderDays = Number(row.ErinnerungsTage || 0);\n    const allowedDays = reminderDays > 0 ? new Set([reminderDays, 3, 1, 0]) : defaultReminderDays;\n    const deadline = new Date(`${row.Fristdatum}T00:00:00`);\n    if (Number.isNaN(deadline.getTime())) continue;\n\n    const days = Math.ceil((deadline - today) / 86400000);\n    if (days >= 0 && !allowedDays.has(days)) continue;\n\n    const area = row.Bereich || \"Behörden-Cockpit\";\n    const title = row.Fristtitel || \"Frist prüfen\";\n    const nextStep = row.NaechsterSchritt || \"Nächsten Schritt im Cockpit prüfen\";\n    const authority = row.BehoerdeName || \"Behörde\";\n    const dueText = dayText(days);\n    const message = `${area}: ${title} bei ${authority} läuft ${dueText} ab (${row.Fristdatum}). ${nextStep}.`;\n    const idPart = row.VorgangsID || Math.random().toString(36).slice(2, 8);\n\n    reminders.push({\n      frist_id: `${row.VorgangsID || \"FRIST\"}-${row.Fristdatum}`,\n      vorgang_id: row.VorgangsID || \"\",\n      titel: title,\n      bereich: area,\n      fristdatum: row.Fristdatum,\n      behoerdeName: authority,\n      email: row.Email || \"\",\n      daysRemaining: days,\n      dueText,\n      level: levelForDays(days),\n      recipientPhone,\n      templateParams: [area, title, dueText, row.Fristdatum],\n      message,\n      auditId: `LOG-${Date.now()}-${idPart}`,\n      timestamp: new Date().toISOString().slice(0, 16).replace(\"T\", \" \"),\n    });\n  }\n\n  return reminders;\n}\n\nconst rows = items.map((item) => item.json);\nreturn buildWhatsAppReminders(rows).map((json) => ({ json }));"
+      },
+      "id": "build-reminders",
+      "name": "Erinnerungen bauen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -340,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://graph.facebook.com/v20.0/WHATSAPP_PHONE_NUMBER_ID/messages",
+        "authentication": "predefinedCredentialType",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ {\n  messaging_product: 'whatsapp',\n  to: $json.recipientPhone,\n  type: 'template',\n  template: {\n    name: 'frist_erinnerung_de',\n    language: { code: 'de' },\n    components: [\n      {\n        type: 'body',\n        parameters: $json.templateParams.map((text) => ({ type: 'text', text }))\n      }\n    ]\n  }\n} }}",
+        "options": {}
+      },
+      "id": "send-whatsapp",
+      "name": "WhatsApp senden",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -100,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_WHATSAPP_CREDENTIAL_ID",
+          "name": "WhatsApp Business Token"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1FEnhO0S8fZzzoEKbXVLyX6mn6Su25GIZ4bJbtwd3eks",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Audit_Log",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "log_id": "={{ $('Erinnerungen bauen').item.json.auditId }}",
+            "zeitpunkt": "={{ $('Erinnerungen bauen').item.json.timestamp }}",
+            "aktion": "WhatsApp-Erinnerung gesendet",
+            "objekt": "={{ $('Erinnerungen bauen').item.json.frist_id }}",
+            "bereich": "={{ $('Erinnerungen bauen').item.json.bereich }}",
+            "details": "={{ $('Erinnerungen bauen').item.json.message }}",
+            "quelle": "n8n",
+            "level": "={{ $('Erinnerungen bauen').item.json.level }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "append-audit-log",
+      "name": "Audit_Log schreiben",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        140,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Täglich 08:00": {
+      "main": [
+        [
+          {
+            "node": "Fristen lesen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fristen lesen": {
+      "main": [
+        [
+          {
+            "node": "Erinnerungen bauen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Erinnerungen bauen": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp senden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WhatsApp senden": {
+      "main": [
+        [
+          {
+            "node": "Audit_Log schreiben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "timezone": "Europe/Berlin",
+    "executionOrder": "v1"
+  },
+  "active": false
+}

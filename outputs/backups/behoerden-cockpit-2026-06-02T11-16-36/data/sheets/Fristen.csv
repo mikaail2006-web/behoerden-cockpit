@@ -1,0 +1,5 @@
+Fristdatum,Fristtitel,Bereich,BehoerdeName,VorgangsID,Telefon,Email,ErinnerungsTage,Status,NaechsterSchritt,Anmerkungen,,LetzteErinnerung
+2026-06-14,Bescheid Frist prüfen,EM-Rente,Deutsche Rentenversicherung,EMR-2026-001,+491234567890,kontakt@drv.de,7,Offen,Bescheid prüfen,-,,
+2026-06-12,Widerspruchsfrist EM-Rente prüfen,EM-Rente,Deutsche Rentenversicherung,EMR-2026-001,+491234567890,kontakt@drv.de,7,Offen,Ärztliche Unterlagen prüfen,-,,
+2026-06-18,Wohngeld Nachweise einreichen,Wohngeld,Wohngeldstelle,WG-2026-004,+491234567891,kontakt@wohngeld.de,7,Offen,Einkommensnachweise prüfen,-,,
+2026-07-02,GdB Bescheid kontrollieren,GdB 100,Versorgungsamt,GDB-2026-003,+491234567892,kontakt@versorgungsamt.de,7,Offen,Merkzeichen und Bescheid prüfen,-,,

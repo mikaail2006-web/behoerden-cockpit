@@ -1,0 +1,879 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1a3a2e">
+    
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Behörden-Cockpit</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body class="locked">
+    <section class="lock-screen" id="lockScreen" aria-label="Cockpit Sperre">
+      <form class="lock-panel" id="lockForm">
+        <div class="brand-mark">BK</div>
+        <h1 id="lockTitle">Cockpit entsperren</h1>
+        <p id="lockHint">PIN eingeben, um das Behörden-Cockpit zu öffnen.</p>
+        <label>PIN
+          <input id="lockPinInput" type="password" inputmode="numeric" autocomplete="current-password" minlength="4" maxlength="12" required>
+        </label>
+        <button class="primary-button" type="submit"><span data-icon="shield-check"></span>Öffnen</button>
+        <p class="lock-error" id="lockError" role="alert"></p>
+      </form>
+    </section>
+
+    <aside class="sidebar" aria-label="Navigation">
+      <div class="brand">
+        <div class="brand-mark">BK</div>
+        <div>
+          <strong>Behörden-Cockpit</strong>
+          <span>Murat Kocyigit</span>
+        </div>
+      </div>
+      <nav>
+        <button class="nav-button active" data-view="dashboard" title="Dashboard"><span data-icon="layout-dashboard"></span>Dashboard</button>
+        <button class="nav-button" data-view="cases" title="Vorgänge"><span data-icon="briefcase"></span>Vorgänge</button>
+        <button class="nav-button" data-view="check" title="Bescheid-Check"><span data-icon="scan-text"></span>Check</button>
+        <button class="nav-button" data-view="checklists" title="Checklisten"><span data-icon="clipboard-check"></span>Listen</button>
+        <button class="nav-button" data-view="documents" title="Dokumente"><span data-icon="files"></span>Dokumente</button>
+        <button class="nav-button" data-view="deadlines" title="Fristen"><span data-icon="calendar-clock"></span>Fristen</button>
+        <button class="nav-button" data-view="tasks" title="Aufgaben"><span data-icon="list-checks"></span>Aufgaben</button>
+        <button class="nav-button" data-view="contacts" title="Kontakte"><span data-icon="contact"></span>Kontakte</button>
+        <button class="nav-button" data-view="activity" title="Aktivitäten"><span data-icon="history"></span>Aktivitäten</button>
+        <button class="nav-button" data-view="archive" title="Archiv"><span data-icon="archive"></span>Archiv</button>
+        <button class="nav-button" data-view="automation" title="Automationen"><span data-icon="workflow"></span>Automationen</button>
+        <button class="nav-button" data-view="portal" title="Portal"><span data-icon="shield-check"></span>Portal</button>
+        <button class="nav-button" data-view="setup" title="Setup"><span data-icon="settings"></span>Setup</button>
+      </nav>
+    </aside>
+
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Arbeitsstand MVP</p>
+          <h1>Behörden-Cockpit</h1>
+        </div>
+        <div class="topbar-actions">
+          <label class="search">
+            <span data-icon="search"></span>
+            <input id="searchInput" type="search" placeholder="Suche">
+          </label>
+          <span class="search-count" id="searchCount">Alle Einträge</span>
+          <button class="icon-button" id="clearSearchButton" title="Suche zurücksetzen"><span data-icon="x"></span></button>
+          <button class="icon-button" id="lockButton" title="Cockpit sperren"><span data-icon="lock"></span></button>
+          <button class="icon-button" id="exportButton" title="CSV exportieren"><span data-icon="download"></span></button>
+        </div>
+      </header>
+
+      <section class="module-strip" id="moduleStrip"></section>
+
+      <section class="view active" id="dashboard">
+        <div class="metrics" id="metrics"></div>
+        <section class="readiness-banner" id="readinessBanner" aria-label="Echtdaten-Freigabe"></section>
+        <section class="quality-strip" id="qualityStrip" aria-label="Datenqualität"></section>
+        <div class="two-column">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Priorisierte Vorgänge</h2>
+              <select id="areaFilter" aria-label="Bereich filtern">
+                <option value="all">Alle Bereiche</option>
+              </select>
+            </div>
+            <div class="case-list" id="caseList"></div>
+          </section>
+          <section class="panel">
+            <div class="panel-header">
+              <h2>KI-Dokumentenanalyse</h2>
+              <button class="text-button" id="analyzeButton"><span data-icon="refresh-cw"></span>Analysen neu laden</button>
+            </div>
+            <div class="analysis-box" id="analysisBox"></div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="cases">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Vorgangsregister</h2>
+            <button class="text-button" id="addCaseButton"><span data-icon="briefcase-business"></span>Vorgang anlegen</button>
+          </div>
+          <div class="case-register" id="casesTable"></div>
+        </section>
+      </section>
+
+      <section class="view" id="check">
+        <div class="two-column">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Dokument hochladen</h2>
+              <span class="badge info" id="checkUploadModeBadge">Fallback</span>
+            </div>
+            <div class="followup-note" id="followupNote" hidden></div>
+            <button class="upload-preflight-status" id="uploadPreflightStatus" type="button"></button>
+            <form class="upload-form" id="documentCheckForm">
+              <label class="drop-zone">
+                <span data-icon="upload-cloud"></span>
+                <strong id="uploadFileLabel">PDF, Foto oder Brief auswählen</strong>
+                <small id="uploadModeHint">Upload-Fallback ist aktiv.</small>
+                <input id="documentUploadInput" type="file" accept=".pdf,image/*,.txt,.doc,.docx">
+              </label>
+              <div class="form-grid">
+                <label>Bereich
+                  <select id="checkAreaSelect"></select>
+                </label>
+                <label>Dokumenttyp
+                  <select id="checkTypeSelect">
+                    <option>Bescheid</option>
+                    <option>Brief</option>
+                    <option>Nachweis</option>
+                    <option>Arztbericht</option>
+                    <option>Antrag</option>
+                  </select>
+                </label>
+              </div>
+              <div class="rename-preview">
+                <span>Automatischer Dateiname</span>
+                <strong id="renamePreview">YYYY-MM-DD_EM-Rente_Bescheid_Murat-Kocyigit.pdf</strong>
+              </div>
+              <div class="first-real-guide" id="firstRealUploadGuide">
+                <div>
+                  <strong>Erstes echtes Dokument</strong>
+                  <span id="firstRealUploadStatus">Vor dem Einzelupload alle Kontrollpunkte prüfen.</span>
+                </div>
+                <label><input type="checkbox" data-first-real-item="filename"> <span>Dateiname und Bereich geprüft</span></label>
+                <label><input type="checkbox" data-first-real-item="upload"> <span>Upload/Analyse erfolgt</span></label>
+                <label><input type="checkbox" data-first-real-item="result"> <span>Prüfergebnis gelesen</span></label>
+                <label><input type="checkbox" data-first-real-item="deadline"> <span>Frist und Aufgabe kontrolliert</span></label>
+                <label><input type="checkbox" data-first-real-item="driveSheet"> <span>Drive- und Sheet-Eintrag geprüft</span></label>
+                <button class="text-button first-real-reset-button" id="resetFirstRealUploadButton" type="button"><span data-icon="rotate-ccw"></span>Einzelupload-Kontrolle zurücksetzen</button>
+              </div>
+              <button class="primary-button" id="documentCheckSubmitButton" type="submit"><span data-icon="sparkles"></span>Bescheid prüfen</button>
+            </form>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Prüfergebnis</h2>
+              <span class="badge medium" id="checkRiskBadge">Bereit</span>
+            </div>
+            <div class="check-result" id="checkResult">
+              <p class="meta">Noch kein Dokument geprüft.</p>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="checklists">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Checklisten</h2>
+            <div class="button-row">
+              <select id="checklistAreaFilter" aria-label="Checklist Bereich wählen"></select>
+              <button class="text-button" id="toggleDoneChecklistsButton" type="button"><span data-icon="eye-off"></span>Erledigte ausblenden</button>
+              <button class="text-button" id="addChecklistButton" type="button"><span data-icon="list-plus"></span>Punkt anlegen</button>
+            </div>
+          </div>
+          <div class="list-summary" id="checklistSummary"></div>
+          <div class="checklist-board" id="checklistBoard"></div>
+        </section>
+      </section>
+
+      <section class="view" id="documents">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Dokumentenregister</h2>
+            <button class="text-button" id="addDocumentButton"><span data-icon="upload-cloud"></span>Dokument hochladen</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Dokument</th>
+                  <th>Bereich</th>
+                  <th>Typ</th>
+                  <th>Status</th>
+                  <th>Eingang</th>
+                  <th>Aktion</th>
+                </tr>
+              </thead>
+              <tbody id="documentsTable"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="deadlines">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Fristenüberwachung</h2>
+            <div class="button-row">
+              <button class="text-button" id="toggleDoneDeadlinesButton" type="button"><span data-icon="eye-off"></span>Erledigte ausblenden</button>
+              <button class="text-button" id="addDeadlineButton"><span data-icon="calendar-plus"></span>Frist anlegen</button>
+            </div>
+          </div>
+          <p class="section-hint">Automatisch sortiert: überfällige und frühe Fristen zuerst, erledigte Einträge unten.</p>
+          <div class="list-summary" id="deadlineSummary"></div>
+          <div class="deadline-board" id="deadlineBoard"></div>
+        </section>
+      </section>
+
+      <section class="view" id="tasks">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Aufgaben</h2>
+            <div class="button-row">
+              <button class="text-button" id="toggleDoneTasksButton" type="button"><span data-icon="eye-off"></span>Erledigte ausblenden</button>
+              <button class="text-button" id="addTaskButton"><span data-icon="list-plus"></span>Aufgabe anlegen</button>
+            </div>
+          </div>
+          <p class="section-hint">Automatisch sortiert: offene und fällige Aufgaben zuerst, erledigte Einträge unten.</p>
+          <div class="list-summary" id="taskSummary"></div>
+          <div class="task-board" id="taskBoard"></div>
+        </section>
+      </section>
+
+      <section class="view" id="contacts">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Kontaktregister</h2>
+            <button class="text-button" id="addContactButton"><span data-icon="user-plus"></span>Kontakt anlegen</button>
+          </div>
+          <div class="contact-grid" id="contactGrid"></div>
+        </section>
+      </section>
+
+      <section class="view" id="activity">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Aktivitäten</h2>
+            <button class="text-button" id="addAuditButton"><span data-icon="history"></span>Eintrag anlegen</button>
+          </div>
+          <div class="activity-list" id="activityList"></div>
+        </section>
+      </section>
+
+      <section class="view" id="archive">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Archiv</h2>
+            <span class="badge info">Wiederherstellung</span>
+          </div>
+          <div class="archive-summary" id="archiveSummary"></div>
+          <div class="archive-list" id="archiveList"></div>
+        </section>
+      </section>
+
+      <section class="view" id="automation">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>n8n Automationen</h2>
+            <button class="text-button" id="runAutomationButton"><span data-icon="refresh-cw"></span>Status prüfen</button>
+          </div>
+          <div class="integration-readiness" id="integrationSetupSection">
+            <div>
+              <strong>Produktiv-Integrationen</strong>
+              <span id="integrationReadiness">Integrationen noch offen.</span>
+            </div>
+            <div class="integration-checklist" id="integrationChecklist">
+              <label><input type="checkbox" data-integration-item="whatsappProvider"> <span>WhatsApp Business Provider verbunden</span><code>Provider + Telefonnummer</code></label>
+              <label><input type="checkbox" data-integration-item="whatsappTemplate"> <span>WhatsApp Template freigegeben</span><code>Fristenerinnerung</code></label>
+              <label><input type="checkbox" data-integration-item="recipientOptIn"> <span>Empfänger-Opt-in geprüft</span><code>kein Versand ohne Zustimmung</code></label>
+              <label><input type="checkbox" data-integration-item="kiEndpoint"> <span>KI/OCR-Endpunkt hinterlegt</span><code>n8n Credential</code></label>
+              <label><input type="checkbox" data-integration-item="n8nCredentials"> <span>n8n Credentials geprüft</span><code>Drive, Sheets, WhatsApp, KI</code></label>
+              <label><input type="checkbox" data-integration-item="integrationTest"> <span>Unkritischer Integrationstest bestanden</span><code>Upload, Analyse, Erinnerung</code></label>
+            </div>
+            <div class="integration-test-card" id="integrationTestCard">
+              <div>
+                <strong>Unkritischer Produktiv-Testlauf</strong>
+                <span id="integrationTestStatus">Noch nicht protokolliert.</span>
+              </div>
+              <div class="integration-test-checklist" id="integrationTestChecklist">
+                <label><input type="checkbox" data-integration-test-item="upload"> <span>Testdokument ohne echte Gesundheitsdaten hochgeladen</span><code>Check-Ansicht</code></label>
+                <label><input type="checkbox" data-integration-test-item="drive"> <span>Drive-Ablage und Dateiname kontrolliert</span><code>Ordner + Name</code></label>
+                <label><input type="checkbox" data-integration-test-item="sheet"> <span>Google-Sheet-Eintrag geprüft</span><code>Dokumente + Audit</code></label>
+                <label><input type="checkbox" data-integration-test-item="analysis"> <span>KI/OCR-Ergebnis plausibel geprüft</span><code>Risiko + Frist</code></label>
+                <label><input type="checkbox" data-integration-test-item="reminder"> <span>Test-Erinnerung nur an eigene Nummer geprüft</span><code>Opt-in</code></label>
+              </div>
+              <div class="integration-test-config" id="integrationTestConfig">
+                <label>Testkanal
+                  <select id="integrationTestChannelInput">
+                    <option value="whatsapp">WhatsApp</option>
+                    <option value="email">E-Mail</option>
+                    <option value="audit">Nur Audit-Log</option>
+                  </select>
+                </label>
+                <label>Eigener Testempfänger
+                  <input id="integrationTestRecipientInput" type="text" placeholder="+49123456789 oder test@example.de">
+                  <small id="integrationRecipientHint">WhatsApp erwartet Telefonnummer mit +Ländercode.</small>
+                </label>
+                <label class="integration-optin"><input id="integrationTestOptInInput" type="checkbox"> <span>Opt-in für Testversand bestätigt</span></label>
+                <span id="integrationTestConfigStatus">Testversand noch nicht vorbereitet.</span>
+              </div>
+              <div class="integration-message-preview" id="integrationMessagePreview"></div>
+              <div class="integration-payload-preview" id="integrationPayloadPreview"></div>
+              <div class="integration-result-check" id="integrationResultCheck">
+                <strong>n8n-Ergebnis prüfen</strong>
+                <label><input type="checkbox" data-result-item="driveResult"> <span>Drive-Datei ist angekommen</span></label>
+                <label><input type="checkbox" data-result-item="sheetResult"> <span>Sheet-Zeile wurde geschrieben</span></label>
+                <label><input type="checkbox" data-result-item="analysisResult"> <span>Analyse/Audit wurde erstellt</span></label>
+                <label><input type="checkbox" data-result-item="reminderResult"> <span>Test-Erinnerung wurde kontrolliert</span></label>
+                <textarea id="integrationResultNoteInput" rows="3" placeholder="Kurze Ergebnisnotiz, z.B. n8n Run, Sheet-Zeile, Auffälligkeiten"></textarea>
+                <small id="integrationResultStatus">n8n-Ergebnis offen: 0/4.</small>
+              </div>
+              <div class="integration-flow-guide" id="integrationFlowGuide">
+                <strong>n8n-Testablauf</strong>
+                <label><input type="checkbox" data-flow-item="payloadCopied"> <span>n8n-Testpayload kopieren oder Datei laden</span></label>
+                <label><input type="checkbox" data-flow-item="webhookRun"> <span>Webhook-Test in n8n mit Testdaten auslösen</span></label>
+                <label><input type="checkbox" data-flow-item="resultsChecked"> <span>Drive, Sheets, KI/OCR und Testnachricht prüfen</span></label>
+                <label><input type="checkbox" data-flow-item="protocolReady"> <span>Prüfpunkte abhaken und Testlauf protokollieren</span></label>
+                <small id="integrationFlowStatus">n8n-Testablauf offen: 0/4.</small>
+              </div>
+              <div class="integration-test-actions">
+                <button class="text-button" type="button" id="openIntegrationUploadTestButton"><span data-icon="upload-cloud"></span>Testupload öffnen</button>
+                <button class="text-button" type="button" id="markIntegrationTestButton"><span data-icon="check"></span>Testlauf protokollieren</button>
+                <button class="text-button" type="button" id="downloadIntegrationTestReportButton"><span data-icon="download"></span>Testprotokoll</button>
+                <button class="text-button" type="button" id="copyIntegrationPayloadButton"><span data-icon="copy"></span>n8n-Testpayload</button>
+                <button class="text-button" type="button" id="downloadIntegrationPayloadButton"><span data-icon="download"></span>Payload-Datei</button>
+              </div>
+            </div>
+            <button class="text-button integration-reset-button" type="button" id="resetIntegrationChecklistButton"><span data-icon="rotate-ccw"></span>Integrationen zurücksetzen</button>
+          </div>
+          <div class="automation-grid" id="automationGrid"></div>
+        </section>
+      </section>
+
+      <section class="view" id="portal">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Kundenportal Vorbereitung</h2>
+            <label class="toggle">
+              <input id="portalToggle" type="checkbox" checked>
+              <span>Portal aktiv</span>
+            </label>
+          </div>
+          <div class="portal-layout">
+            <div>
+              <h3>Portal-Funktionen</h3>
+              <ul class="check-list">
+                <li><span data-icon="upload-cloud"></span>Dokumentenupload mit Zuordnung</li>
+                <li><span data-icon="message-square-lock"></span>Sichere Nachrichten</li>
+                <li><span data-icon="list-checks"></span>Aufgaben und Nachweise</li>
+                <li><span data-icon="history"></span>Statushistorie je Vorgang</li>
+              </ul>
+              <h3>Rollenmodell</h3>
+              <div class="role-grid">
+                <article class="role-card">
+                  <strong>Admin</strong>
+                  <p>System einrichten, Nutzer verwalten, Datenquellen und Automationen ändern.</p>
+                  <span class="badge critical">Vollzugriff</span>
+                </article>
+                <article class="role-card">
+                  <strong>Bearbeiter</strong>
+                  <p>Vorgänge pflegen, Dokumente prüfen, Fristen und Aufgaben bearbeiten.</p>
+                  <span class="badge medium">Fachzugriff</span>
+                </article>
+                <article class="role-card">
+                  <strong>Kunde</strong>
+                  <p>Eigene Dokumente hochladen, Aufgaben sehen und sichere Nachrichten senden.</p>
+                  <span class="badge info">Portalzugriff</span>
+                </article>
+              </div>
+              <h3>Rechte-Matrix</h3>
+              <div class="permission-table">
+                <div></div>
+                <strong>Admin</strong>
+                <strong>Bearbeiter</strong>
+                <strong>Kunde</strong>
+                <span>Dokumente hochladen</span>
+                <b>Ja</b><b>Ja</b><b>Ja</b>
+                <span>Fristen bearbeiten</span>
+                <b>Ja</b><b>Ja</b><b>Nein</b>
+                <span>Kontakte und Behörden pflegen</span>
+                <b>Ja</b><b>Ja</b><b>Nein</b>
+                <span>Automationen ändern</span>
+                <b>Ja</b><b>Nein</b><b>Nein</b>
+                <span>Eigene Aufgaben sehen</span>
+                <b>Ja</b><b>Ja</b><b>Ja</b>
+              </div>
+              <h3>Login-Optionen</h3>
+              <div class="auth-options">
+                <article>
+                  <strong>Supabase Auth</strong>
+                  <p>Gute Wahl für SaaS-Start: Nutzer, Rollen, Datenbank und Storage lassen sich gemeinsam absichern.</p>
+                  <span class="badge ok">Empfohlen</span>
+                </article>
+                <article>
+                  <strong>Firebase Auth</strong>
+                  <p>Schneller Login mit Google/E-Mail, stark für mobile Apps, weniger direkt für SQL-Datenmodelle.</p>
+                  <span class="badge info">Alternative</span>
+                </article>
+                <article>
+                  <strong>Eigener Server-Login</strong>
+                  <p>Maximale Kontrolle, aber mehr Aufwand für Sicherheit, Sitzungen, Passwort-Reset und Wartung.</p>
+                  <span class="badge medium">Später</span>
+                </article>
+              </div>
+              <h3>Supabase-Umsetzungsplan</h3>
+              <ol class="implementation-list">
+                <li>Projekt anlegen und E-Mail-Login aktivieren.</li>
+                <li>Tabellen für Profile, Rollen, Vorgänge, Dokumente, Fristen und Aufgaben anlegen.</li>
+                <li>Rollen Admin, Bearbeiter und Kunde in Profilen speichern.</li>
+                <li>Row-Level-Security aktivieren: Kunden sehen nur eigene Vorgänge.</li>
+                <li>Drive/n8n Uploads nur über geschützte Server-Endpunkte erlauben.</li>
+              </ol>
+              <h3>Tabellenmodell</h3>
+              <div class="data-model">
+                <span>profiles</span><small>Nutzer, Rolle, Mandant</small>
+                <span>cases</span><small>Vorgänge, Status, Bereich, Behörde</small>
+                <span>documents</span><small>Dateien, Drive-Link, Analyse-Status</small>
+                <span>deadlines</span><small>Fristen, Erinnerungstage, Status</small>
+                <span>tasks</span><small>Aufgaben, Fälligkeit, Verantwortliche</small>
+                <span>audit_log</span><small>Änderungen, Uploads, Erinnerungen</small>
+              </div>
+              <h3>Produktivstatus</h3>
+              <div class="production-status">
+                <article><strong>Lokal fertig</strong><p>PIN-Schutz, Dokumentenprüfung, Fristen, Aufgaben, Archiv und Sheet-Sync.</p></article>
+                <article><strong>Testbetrieb bestanden</strong><p>Supabase-Testprojekt, RLS, Portal-API, Upload und lokale OCR-Regeln sind geprüft.</p></article>
+                <article><strong>Nächster Schutzschritt</strong><p>Vor echten Dokumenten Preflight, Freigaben, Backup und Abnahme prüfen.</p></article>
+              </div>
+              <div class="next-tech-step">
+                <strong>Nächste 6 Punkte</strong>
+                <p>Testbetrieb ist bestanden. Vor sensiblen Daten kommen jetzt Preflight, manuelle Freigaben und Abnahme.</p>
+                <ol class="setup-flow">
+                  <li><span>1. Preflight</span><code>Preflight-Echte-Daten.command</code></li>
+                  <li><span>2. Freigaben</span><code>Drive, Sheet, n8n prüfen</code></li>
+                  <li><span>3. Abnahme</span><code>docs/abnahmeprotokoll.md</code></li>
+                  <li><span>4. Echtdaten</span><code>docs/echte-daten-starten.md</code></li>
+                  <li><span>5. WhatsApp</span><code>n8n Credential + Template</code></li>
+                  <li><span>6. KI</span><code>n8n KI-Endpunkt verbinden</code></li>
+                </ol>
+                <div class="file-sequence">
+                  <code>supabase/000_combined_portal_setup.sql</code>
+                  <code>supabase/001_portal_schema.sql</code>
+                  <code>supabase/002_storage_policies.sql</code>
+                  <code>supabase/003_seed_roles_examples.sql</code>
+                  <code>supabase/005_security_advisor_fix.sql</code>
+                  <code>supabase/006_create_test_auth_users.sql</code>
+                  <code>supabase/007_create_rls_test_data.sql</code>
+                  <code>supabase/008_rls_claims_smoke_test.sql</code>
+                  <code>supabase/009_rls_claims_summary_test.sql</code>
+                  <code>supabase/010_rls_final_status_test.sql</code>
+                  <code>supabase/011_fix_test_auth_login_tokens.sql</code>
+                  <code>supabase/test_profiles_template.sql</code>
+                  <code>supabase/test_data_template.sql</code>
+                  <code>supabase/004_rls_test_queries.sql</code>
+                  <code>supabase/test_data_cleanup.sql</code>
+                </div>
+              </div>
+            </div>
+            <form class="portal-form" id="portalForm">
+              <label>Webhook URL<input type="url" value="https://n8n.example/webhook/portal-upload"></label>
+              <label>Mandanten-ID<input type="text" value="mk-001"></label>
+              <label>Erinnerungskanal
+                <select>
+                  <option>WhatsApp</option>
+                  <option>E-Mail</option>
+                  <option>WhatsApp und E-Mail</option>
+                </select>
+              </label>
+              <button class="primary-button" type="submit"><span data-icon="save"></span>Einstellungen speichern</button>
+            </form>
+          </div>
+        </section>
+      </section>
+
+      <section class="view" id="setup">
+        <div class="two-column setup-grid">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Einrichtung</h2>
+              <span class="badge info" id="dataSourceBadge">Lokale Daten</span>
+            </div>
+            <div class="setup-steps">
+              <article class="setup-step done">
+                <span data-icon="check"></span>
+                <div>
+                  <strong>App-Prototyp</strong>
+                  <p>Dashboard, Vorgänge, Dokumente, Fristen, Aufgaben und Kontakte sind aktiv.</p>
+                </div>
+              </article>
+              <article class="setup-step done">
+                <span data-icon="check"></span>
+                <div>
+                  <strong>Google Drive und Sheets</strong>
+                  <p>Drive-Ablage, Sheet-Datenbank und Fristenstruktur sind verbunden.</p>
+                </div>
+              </article>
+              <article class="setup-step done">
+                <span data-icon="check"></span>
+                <div>
+                  <strong>n8n Daten-API</strong>
+                  <p>Live-Daten werden über n8n geladen und im Cockpit angezeigt.</p>
+                </div>
+              </article>
+              <article class="setup-step done">
+                <span data-icon="check"></span>
+                <div>
+                  <strong>Live Upload</strong>
+                  <p>Dokumente werden in Drive gespeichert, analysiert und mit Sheets synchronisiert.</p>
+                </div>
+              </article>
+              <article class="setup-step active">
+                <span data-icon="plug"></span>
+                <div>
+                  <strong>Offen: Freigaben und Credentials</strong>
+                  <p>Vor echten Dokumenten Preflight, Drive-/Sheet-/n8n-Freigaben und Produktiv-Credentials prüfen.</p>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Datenquelle</h2>
+              <button class="text-button" id="reloadDataButton"><span data-icon="refresh-cw"></span>Neu laden</button>
+            </div>
+            <form class="portal-form" id="dataSourceForm">
+              <label>Daten-URL
+                <input id="dataSourceInput" type="url" placeholder="https://deine-n8n-domain/webhook/behoerden-cockpit-data">
+              </label>
+              <div class="button-row">
+                <button class="primary-button" type="submit"><span data-icon="save"></span>Speichern</button>
+                <button class="text-button" type="button" id="resetDataSourceButton"><span data-icon="rotate-ccw"></span>Lokal nutzen</button>
+              </div>
+            </form>
+            <div class="setup-note" id="securitySetupSection">
+              <strong>Lokale Standardquelle</strong>
+              <code>cockpit-data.json</code>
+            </div>
+            <div class="setup-note" id="opsSetupSection">
+              <strong>Lokale Starter</strong>
+              <p>Heute starten: <code>Heute-Starten.command</code></p>
+              <p>App starten: <code>Start-Behörden-Cockpit.command</code></p>
+              <p>App prüfen: <code>Check-Behörden-Cockpit.command</code></p>
+              <p>Statusbericht: <code>Status-Behörden-Cockpit.command</code></p>
+              <p>Echte-Daten-Preflight: <code>Preflight-Echte-Daten.command</code></p>
+              <p>Lokales Backup erstellen: <code>Backup-Behörden-Cockpit.command</code></p>
+              <p>Backup wiederherstellen prüfen: <code>Restore-Test-Behörden-Cockpit.command</code></p>
+              <p>Supabase vorbereiten: <code>Start-Supabase-Vorbereitung.command</code></p>
+              <p>Supabase SQL kopieren: <code>Copy-Supabase-Setup.command</code></p>
+              <p>Supabase Testprofile kopieren: <code>Copy-Supabase-Testprofile.command</code></p>
+              <p>Supabase Testdaten kopieren: <code>Copy-Supabase-Testdaten.command</code></p>
+              <p>Supabase RLS-Test kopieren: <code>Copy-Supabase-RLS-Test.command</code></p>
+              <p>Supabase Cleanup kopieren: <code>Copy-Supabase-Cleanup.command</code></p>
+              <p>Portal Env vorbereiten: <code>Copy-Portal-Env.command</code></p>
+              <p>Portal Env prüfen: <code>Check-Portal-Env.command</code></p>
+              <p>Portal-Demo starten: <code>Start-Portal-Demo.command</code></p>
+              <p>Portal-Demo mit Supabase starten: <code>Start-Portal-Demo-Supabase.command</code></p>
+              <p>Portal-Demo prüfen: <code>Check-Portal-Demo.command</code></p>
+              <p>Supabase Token kopieren: <code>Copy-Supabase-Access-Token.command</code></p>
+              <p>Portal Bearer prüfen: <code>Check-Portal-Bearer.command</code></p>
+            </div>
+            <div class="setup-note">
+              <strong>Supabase Testlauf</strong>
+              <ol class="setup-flow">
+                <li><span>Setup</span><code>Copy-Supabase-Setup.command</code></li>
+                <li><span>Profile</span><code>Copy-Supabase-Testprofile.command</code></li>
+                <li><span>Testdaten</span><code>Copy-Supabase-Testdaten.command</code></li>
+                <li><span>RLS prüfen</span><code>Copy-Supabase-RLS-Test.command</code></li>
+                <li><span>Aufräumen</span><code>Copy-Supabase-Cleanup.command</code></li>
+              </ol>
+            </div>
+            <div class="setup-note">
+              <strong>Portal Live-Test</strong>
+              <ol class="setup-flow">
+                <li><span>Env</span><code>Check-Portal-Env.command</code></li>
+                <li><span>Start</span><code>Start-Portal-Demo-Supabase.command</code></li>
+                <li><span>Token</span><code>Copy-Supabase-Access-Token.command</code></li>
+                <li><span>API prüfen</span><code>Check-Portal-Bearer.command</code></li>
+              </ol>
+            </div>
+            <div class="setup-note">
+              <strong>Dokumenten-Upload</strong>
+              <span class="badge info" id="uploadWebhookBadge">Fallback</span>
+              <form class="portal-form compact-form" id="uploadWebhookForm">
+                <label>Upload-Webhook
+                  <input id="uploadWebhookInput" type="url" placeholder="https://deine-n8n-domain/webhook/document-check">
+                </label>
+                <div class="button-row">
+                  <button class="primary-button" type="submit"><span data-icon="save"></span>Speichern</button>
+                  <button class="text-button" type="button" id="resetUploadWebhookButton"><span data-icon="rotate-ccw"></span>Upload-Fallback nutzen</button>
+                </div>
+              </form>
+            </div>
+            <div class="setup-note">
+              <strong>Sicherheit</strong>
+              <div class="security-status" id="securityStatus"></div>
+              <p>Die PIN schützt diese lokale Browser-Sitzung. Für ein öffentliches Portal ist zusätzlich ein echter Server-Login erforderlich.</p>
+              <div class="setup-note inline-note">
+                <strong>Vor echten Dokumenten</strong>
+                <div class="preflight-checklist" id="preflightChecklist">
+                  <label><input type="checkbox" data-preflight-item="preflight"> <span>Preflight ausgeführt</span><code>Preflight-Echte-Daten.command</code></label>
+                  <label><input type="checkbox" data-preflight-item="drive"> <span>Drive-Freigaben geprüft</span><code>nur berechtigte Personen</code></label>
+                  <label><input type="checkbox" data-preflight-item="sheet"> <span>Sheet-Freigaben geprüft</span><code>nur berechtigte Personen</code></label>
+                  <label><input type="checkbox" data-preflight-item="n8n"> <span>n8n-Zugriff geprüft</span><code>nur berechtigte Personen</code></label>
+                  <label><input type="checkbox" data-preflight-item="backup"> <span>Backup-/Loeschroutine verstanden</span><code>Archiv statt sofort löschen</code></label>
+                  <label><input type="checkbox" data-preflight-item="upload"> <span>erstes echtes Dokument einzeln kontrollieren</span><code>Bereich, Dateiname, Frist</code></label>
+                </div>
+                <p class="preflight-readiness" id="preflightReadiness">Noch nicht für echte Dokumente freigegeben.</p>
+                <button class="text-button preflight-reset-button" type="button" id="resetPreflightButton"><span data-icon="rotate-ccw"></span>Preflight zurücksetzen</button>
+              </div>
+              <form class="portal-form compact-form" id="pinChangeForm">
+                <label>Aktuelle PIN
+                  <input id="currentPinInput" type="password" inputmode="numeric" autocomplete="current-password" minlength="4">
+                </label>
+                <div class="form-grid">
+                  <label>Neue PIN
+                    <input id="newPinInput" type="password" inputmode="numeric" autocomplete="new-password" minlength="4">
+                  </label>
+                  <label>Neue PIN wiederholen
+                    <input id="confirmPinInput" type="password" inputmode="numeric" autocomplete="new-password" minlength="4">
+                  </label>
+                </div>
+                <div class="button-row">
+                  <button class="primary-button" type="submit"><span data-icon="save"></span>PIN ändern</button>
+                  <button class="text-button" type="button" id="resetPinButton"><span data-icon="rotate-ccw"></span>PIN zurücksetzen</button>
+                </div>
+              </form>
+            </div>
+            <div class="setup-note">
+              <strong>Betriebsroutine</strong>
+              <p>Backup, Zugriff und Löschung regelmäßig kontrollieren, bevor echte Daten dauerhaft im Cockpit liegen.</p>
+              <div class="ops-checklist" id="opsChecklist">
+                <label><input type="checkbox" data-ops-item="sheetBackup"> <span>Google Sheet als Excel exportiert</span><code>wöchentlich</code></label>
+                <label><input type="checkbox" data-ops-item="n8nBackup"> <span>n8n Workflows als JSON exportiert</span><code>monatlich</code></label>
+                <label><input type="checkbox" data-ops-item="driveAccess"> <span>Drive-Freigaben kontrolliert</span><code>nur berechtigte Personen</code></label>
+                <label><input type="checkbox" data-ops-item="auditLog"> <span>Letzten Upload im Audit-Log geprüft</span><code>Dokumente, Fristen, Aufgaben</code></label>
+                <label><input type="checkbox" data-ops-item="restoreTest"> <span>Wiederherstellung getestet</span><code>Backup öffnen, Datenabgleich prüfen</code></label>
+                <label><input type="checkbox" data-ops-item="deleteRule"> <span>Löschregel verstanden</span><code>erst archivieren, dann prüfen</code></label>
+              </div>
+              <p class="ops-readiness" id="opsReadiness">Betriebsroutine noch offen.</p>
+              <button class="text-button ops-reset-button" type="button" id="resetOpsChecklistButton"><span data-icon="rotate-ccw"></span>Betriebsroutine zurücksetzen</button>
+            </div>
+            <div class="setup-note">
+              <strong>Nächste Dateien</strong>
+              <p>Projektmanifest: <code>project-manifest.json</code></p>
+              <p>Projektindex: <code>docs/projektindex.md</code></p>
+              <p>Ampelstatus: <code>docs/ampelstatus.md</code></p>
+              <p>FAQ: <code>docs/faq.md</code></p>
+              <p>Kurzanleitung: <code>docs/kurzanleitung.md</code></p>
+              <p>Heute starten: <code>docs/heute-starten.md</code></p>
+              <p>Heute tun: <code>docs/heute-tun.md</code></p>
+              <p>Kommunikationsvorlagen: <code>docs/kommunikationsvorlagen.md</code></p>
+              <p>Dokumenten-Checklisten: <code>docs/dokumenten-checklisten.md</code></p>
+              <p>Unkritischer Upload-Test: <code>docs/unkritischer-upload-test.md</code></p>
+              <p>Echte Daten starten: <code>docs/echte-daten-starten.md</code></p>
+              <p>Echte-Daten-Preflight: <code>Preflight-Echte-Daten.command</code></p>
+              <p>Security Status: <code>docs/security-status.md</code></p>
+              <p>Production Readiness: <code>docs/production-readiness.md</code></p>
+              <p>Fertigstellung: <code>docs/fertigstellung.md</code></p>
+              <p>Pilotplan: <code>docs/pilotplan.md</code></p>
+              <p>Änderungsverlauf: <code>docs/aenderungsverlauf.md</code></p>
+              <p>Nächste Schritte: <code>docs/naechste-schritte.md</code></p>
+              <p>Abnahmeprotokoll: <code>docs/abnahmeprotokoll.md</code></p>
+              <p>Gesamtstatus: <code>docs/gesamtstatus.md</code></p>
+              <p>Apps Script: <code>google-apps-script/setup-behoerden-cockpit.gs</code></p>
+              <p>Apps Script README: <code>google-apps-script/README.md</code></p>
+              <p>Betriebsübergabe: <code>docs/betriebsuebergabe.md</code></p>
+              <p>Datenschutz/Backup: <code>docs/datenschutz-backup-loeschkonzept.md</code></p>
+              <p>Supabase Runbook: <code>docs/supabase-testprojekt-runbook.md</code></p>
+              <p>Supabase Copy-Paste: <code>docs/supabase-copy-paste-reihenfolge.md</code></p>
+              <p>Supabase Gesamtsetup: <code>supabase/000_combined_portal_setup.sql</code></p>
+              <p>Supabase Testprotokoll: <code>docs/supabase-testprotokoll.md</code></p>
+              <p>Supabase Werte: <code>docs/supabase-werte-vorlage.md</code></p>
+              <p>Portal API README: <code>api/README.md</code></p>
+              <p>Portal API Plan: <code>docs/portal-api-plan.md</code></p>
+              <p>Portal Supabase-Anbindung: <code>docs/portal-api-supabase-anbindung.md</code></p>
+              <p>Portal Env Prüfung: <code>docs/portal-env-pruefung.md</code></p>
+              <p>Live-Test Fehlerhilfe: <code>docs/live-test-fehlerhilfe.md</code></p>
+              <p>Portal OpenAPI: <code>api/portal-openapi.yaml</code></p>
+              <p>Portal Env Vorlage: <code>api/.env.example</code></p>
+              <p>Portal Env Prüfung: <code>api/portal-env.mjs</code></p>
+              <p>Portal Rechte: <code>api/portal-permissions.json</code></p>
+              <p>Portal Zugriffscode: <code>api/portal-access.mjs</code></p>
+              <p>Portal Kontext: <code>api/portal-context.mjs</code></p>
+              <p>Portal Supabase-Profil: <code>api/supabase-profile-loader.mjs</code></p>
+              <p>Portal Supabase-Listen: <code>api/supabase-portal-repository.mjs</code></p>
+              <p>Portal Vertragstest: <code>api/portal-contract.test.mjs</code></p>
+              <p>Portal Smoke-Test: <code>api/portal-server.smoke.test.mjs</code></p>
+              <p>Portal Serverbeispiel: <code>api/portal-server.example.mjs</code></p>
+              <p>Portal Demo-Test: <code>docs/portal-demo-testen.md</code></p>
+              <p>Portal Checkliste: <code>docs/portal-produktivstart-checkliste.md</code></p>
+              <p>Startcheckliste: <code>docs/produktivstart-checkliste.md</code></p>
+              <p>ID Mapping: <code>docs/n8n-id-mapping.md</code></p>
+              <p>n8n README: <code>n8n/README.md</code></p>
+              <p>n8n Import: <code>n8n/workflow-cockpit-daten-api-import.json</code></p>
+              <p>Upload Workflow: <code>n8n/workflow-document-check-upload.json</code></p>
+              <p>KI Workflow: <code>n8n/workflow-ocr-ki-analyse.json</code></p>
+              <p>WhatsApp Workflow: <code>n8n/workflow-fristen-whatsapp-erinnerung.json</code></p>
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal-backdrop" id="deadlineModal" hidden>
+      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="deadlineModalTitle">
+        <div class="panel-header">
+          <h2 id="deadlineModalTitle">Frist anlegen</h2>
+          <button class="icon-button" type="button" id="closeDeadlineModalButton" title="Schließen"><span data-icon="x"></span></button>
+        </div>
+        <form class="portal-form" id="deadlineForm">
+          <label>Fristtitel
+            <input id="deadlineTitleInput" type="text" required value="Antwort prüfen">
+          </label>
+          <div class="form-grid">
+            <label>Bereich
+              <select id="deadlineAreaInput"></select>
+            </label>
+            <label>Fristdatum
+              <input id="deadlineDateInput" type="date" required>
+            </label>
+          </div>
+          <label>Nächster Schritt
+            <input id="deadlineNextStepInput" type="text" value="Unterlagen prüfen und Rückmeldung vorbereiten">
+          </label>
+          <div class="button-row">
+            <button class="primary-button" type="submit"><span data-icon="save"></span>Speichern</button>
+            <button class="text-button" type="button" id="cancelDeadlineModalButton">Abbrechen</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="taskModal" hidden>
+      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="taskModalTitle">
+        <div class="panel-header">
+          <h2 id="taskModalTitle">Aufgabe anlegen</h2>
+          <button class="icon-button" type="button" id="closeTaskModalButton" title="Schließen"><span data-icon="x"></span></button>
+        </div>
+        <form class="portal-form" id="taskForm">
+          <label>Aufgabe
+            <input id="taskTitleInput" type="text" required value="Unterlage prüfen">
+          </label>
+          <div class="form-grid">
+            <label>Bereich
+              <select id="taskAreaInput"></select>
+            </label>
+            <label>Fälligkeit
+              <input id="taskDueDateInput" type="date" required>
+            </label>
+          </div>
+          <label>Priorität
+            <select id="taskPriorityInput">
+              <option value="medium">Mittel</option>
+              <option value="high">Hoch</option>
+              <option value="low">Niedrig</option>
+            </select>
+          </label>
+          <div class="button-row">
+            <button class="primary-button" type="submit"><span data-icon="save"></span>Speichern</button>
+            <button class="text-button" type="button" id="cancelTaskModalButton">Abbrechen</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="contactModal" hidden>
+      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="contactModalTitle">
+        <div class="panel-header">
+          <h2 id="contactModalTitle">Kontakt anlegen</h2>
+          <button class="icon-button" type="button" id="closeContactModalButton" title="Schließen"><span data-icon="x"></span></button>
+        </div>
+        <form class="portal-form" id="contactForm">
+          <label>Organisation
+            <input id="contactOrganizationInput" type="text" required value="Neue Kontaktstelle">
+          </label>
+          <div class="form-grid">
+            <label>Ansprechpartner
+              <input id="contactNameInput" type="text" value="Ansprechpartner offen">
+            </label>
+            <label>Bereich
+              <select id="contactAreaInput"></select>
+            </label>
+          </div>
+          <div class="form-grid">
+            <label>E-Mail
+              <input id="contactEmailInput" type="email" value="kontakt@example.de">
+            </label>
+            <label>Telefon
+              <input id="contactPhoneInput" type="tel" placeholder="+491234567890">
+            </label>
+          </div>
+          <div class="button-row">
+            <button class="primary-button" type="submit"><span data-icon="save"></span>Speichern</button>
+            <button class="text-button" type="button" id="cancelContactModalButton">Abbrechen</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="caseModal" hidden>
+      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="caseModalTitle">
+        <div class="panel-header">
+          <h2 id="caseModalTitle">Vorgang anlegen</h2>
+          <button class="icon-button" type="button" id="closeCaseModalButton" title="Schließen"><span data-icon="x"></span></button>
+        </div>
+        <form class="portal-form" id="caseForm">
+          <div class="form-grid">
+            <label>Bereich
+              <select id="caseAreaInput"></select>
+            </label>
+            <label>Status
+              <select id="caseStatusInput">
+                <option>Offen</option>
+                <option>In Bearbeitung</option>
+                <option>Wartet</option>
+              </select>
+            </label>
+          </div>
+          <label>Behörde
+            <input id="caseAuthorityInput" type="text" required value="Behörde">
+          </label>
+          <label>Nächster Schritt
+            <input id="caseNextInput" type="text" required value="Unterlagen prüfen und nächsten Schritt planen">
+          </label>
+          <div class="button-row">
+            <button class="primary-button" type="submit"><span data-icon="save"></span>Speichern</button>
+            <button class="text-button" type="button" id="cancelCaseModalButton">Abbrechen</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="modal-backdrop" id="checklistModal" hidden>
+      <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="checklistModalTitle">
+        <div class="panel-header">
+          <h2 id="checklistModalTitle">Checklistenpunkt anlegen</h2>
+          <button class="icon-button" type="button" id="closeChecklistModalButton" title="Schließen"><span data-icon="x"></span></button>
+        </div>
+        <form class="portal-form" id="checklistForm">
+          <label>Titel
+            <input id="checklistTitleInput" type="text" required value="Nachweis prüfen">
+          </label>
+          <div class="form-grid">
+            <label>Bereich
+              <select id="checklistAreaInput"></select>
+            </label>
+            <label>Beschreibung
+              <input id="checklistDescriptionInput" type="text" value="Unterlage im Drive ablegen und kontrollieren">
+            </label>
+          </div>
+          <div class="button-row">
+            <button class="primary-button" type="submit"><span data-icon="save"></span>Speichern</button>
+            <button class="text-button" type="button" id="cancelChecklistModalButton">Abbrechen</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="config.js?v=n8n-result-note-v1"></script>
+    <script src="app.js?v=n8n-result-note-v1"></script>
+    <script async src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/sw.js")}</script>
+</body>
+</html>

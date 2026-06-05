@@ -1,0 +1,6 @@
+checklist_id,bereich,titel,beschreibung,status
+CL-001,EM-Rente,Aktuelle Arztberichte,"Neurologie, Orthopädie und Hausarztberichte sammeln",Offen
+CL-002,EM-Rente,Versicherungsverlauf prüfen,DRV-Verlauf und Lücken kontrollieren,Offen
+CL-003,Pflegegrad 2,Pflegetagebuch,Hilfebedarf im Alltag dokumentieren,Erledigt
+CL-004,Wohngeld,Mietnachweis,Mietvertrag und aktuelle Miethöhe bereitlegen,Offen
+CL-005,Kinderzuschlag,Einkommensnachweise,"Einnahmen, Kindergeld und Mietkosten prüfen",Offen

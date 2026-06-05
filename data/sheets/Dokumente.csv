@@ -1,0 +1,5 @@
+dokument_id,vorgang_id,bereich,dateiname,dokumenttyp,drive_url,eingangsdatum,ki_status
+DOC-001,EMR-2026-001,EM-Rente,DRV_Bescheid_EM_Rente.pdf,Bescheid,,2026-05-24,Analysiert
+DOC-002,PG-2026-002,Pflegegrad 2,MD_Gutachten_Pflegegrad.pdf,Gutachten,,2026-05-26,Analysiert
+DOC-003,WG-2026-004,Wohngeld,Wohngeld_Nachweise.zip,Nachweis,,2026-05-28,Nicht analysiert
+DOC-004,,Arztberichte,Arztbericht_Neurologie.pdf,Arztbericht,,2026-05-30,In Analyse

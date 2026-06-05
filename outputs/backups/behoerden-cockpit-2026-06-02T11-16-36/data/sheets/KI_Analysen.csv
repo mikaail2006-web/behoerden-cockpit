@@ -1,0 +1,2 @@
+analyse_id,dokument_id,dokument_name,zusammenfassung,risiko,naechster_schritt
+AN-001,DOC-001,DRV_Bescheid_EM_Rente.pdf,"Erkannt wurden ein Bescheid zur EM-Rente eine mögliche Widerspruchsfrist und fehlende medizinische Anlagen.",mittel,"Arztberichte aus Neurologie und Orthopädie mit dem Bescheid verknüpfen danach Fristentscheidung treffen."

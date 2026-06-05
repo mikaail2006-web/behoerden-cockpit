@@ -1,0 +1,80 @@
+tab,column,type,description
+Config,key,text,Konfigurationsschluessel
+Config,value,text,Konfigurationswert wie IDs oder Webhook-URLs
+Config,beschreibung,text,Erklaerung des Konfigurationswerts
+Dashboard,bereich,text,Fachbereich
+Dashboard,offene_vorgaenge,number,Formel fuer offene Vorgaenge je Bereich
+Dashboard,offene_fristen,number,Formel fuer offene Fristen je Bereich
+Dashboard,kritische_fristen,number,Formel fuer kritische Fristen je Bereich
+Dashboard,letzte_aktualisierung,datetime,Zeitpunkt der letzten Einrichtung
+Vorgaenge,vorgang_id,text,Eindeutige Vorgangs-ID
+Vorgaenge,bereich,text,Fachbereich wie EM-Rente oder Pflegegrad
+Vorgaenge,status,text,Offen/In Bearbeitung/Wartet/Erledigt
+Vorgaenge,prioritaet,text,Niedrig/Mittel/Hoch/Kritisch
+Vorgaenge,behoerde,text,Zustaendige Stelle
+Vorgaenge,aktenzeichen,text,Aktenzeichen falls vorhanden
+Vorgaenge,startdatum,date,Startdatum des Vorgangs
+Vorgaenge,naechster_schritt,text,Konkrete naechste Aktion
+Dokumente,dokument_id,text,Eindeutige Dokument-ID
+Dokumente,vorgang_id,text,Referenz zu Vorgaenge
+Dokumente,bereich,text,Fachbereich
+Dokumente,dateiname,text,Originaler Dateiname
+Dokumente,dokumenttyp,text,Antrag/Bescheid/Nachweis/Arztbericht
+Dokumente,drive_url,url,Google Drive Link
+Dokumente,eingangsdatum,date,Datum des Eingangs
+Dokumente,ki_status,text,Nicht analysiert/In Analyse/Analysiert
+Fristen,Fristdatum,date,Faelligkeitsdatum im Format YYYY-MM-DD
+Fristen,Fristtitel,text,Kurzbeschreibung der Frist
+Fristen,Bereich,text,Fachbereich wie EM-Rente oder Wohngeld
+Fristen,BehoerdeName,text,Zustaendige Behoerde oder Stelle
+Fristen,VorgangsID,text,Referenz zu Vorgaenge
+Fristen,Telefon,text,Telefonnummer fuer Erinnerung im Format +49...
+Fristen,Email,text,E-Mail-Adresse der Behoerde oder Stelle
+Fristen,ErinnerungsTage,number,Tage vor Frist fuer Erinnerung
+Fristen,Status,text,Offen/Erledigt/Ueberfaellig
+Fristen,NaechsterSchritt,text,Naechste konkrete Handlung
+Fristen,Anmerkungen,text,Freitextnotiz oder Dateibezug
+Fristen,,text,Reservierte leere Spalte
+Fristen,LetzteErinnerung,date,Wird durch n8n nach Erinnerung gefuellt
+Checklisten,checklist_id,text,Eindeutige Checklisten-ID
+Checklisten,bereich,text,Fachbereich
+Checklisten,titel,text,Benoetigte Unterlage oder Schritt
+Checklisten,beschreibung,text,Details
+Checklisten,status,text,Offen/Erledigt
+Kontakte,kontakt_id,text,Eindeutige Kontakt-ID
+Kontakte,organisation,text,Behoerde/Praxis/Kasse
+Kontakte,ansprechpartner,text,Name
+Kontakte,bereich,text,Fachbereich
+Kontakte,typ,text,Behoerde/Praxis/Kasse/Beratung
+Kontakte,email,email,E-Mail-Adresse
+Kontakte,telefon,text,Telefonnummer
+Aufgaben,aufgabe_id,text,Eindeutige Aufgaben-ID
+Aufgaben,vorgang_id,text,Referenz zu Vorgaenge
+Aufgaben,titel,text,Aufgabe
+Aufgaben,bereich,text,Fachbereich
+Aufgaben,faelligkeit,date,Faelligkeitsdatum
+Aufgaben,prioritaet,text,Niedrig/Mittel/Hoch/Kritisch
+Aufgaben,status,text,Offen/Erledigt
+KI_Analysen,analyse_id,text,Eindeutige Analyse-ID
+KI_Analysen,dokument_id,text,Referenz zu Dokumente
+KI_Analysen,dokument_name,text,Dateiname des analysierten Dokuments
+KI_Analysen,zusammenfassung,text,Kurzfassung
+KI_Analysen,risiko,text,Niedrig/Mittel/Hoch
+KI_Analysen,naechster_schritt,text,Empfohlene Aktion
+Automationen,automation_id,text,Eindeutige Automation-ID
+Automationen,name,text,Workflow-Name
+Automationen,status,text,Aktiv/Pausiert/Fehler
+Automationen,last_run,datetime,Letzte Ausfuehrung
+Audit_Log,log_id,text,Eindeutige Log-ID
+Audit_Log,zeitpunkt,datetime,Zeitpunkt
+Audit_Log,aktion,text,Aenderung oder Automation
+Audit_Log,objekt,text,Vorgang/Dokument/Frist
+Audit_Log,bereich,text,Fachbereich
+Audit_Log,details,text,Details
+Audit_Log,quelle,text,App/n8n/KI/User
+Audit_Log,level,text,info/warning/critical
+Drive_Ordner,bereich,text,Bereich oder Root
+Drive_Ordner,ordner_typ,text,root/hauptordner/unterordner
+Drive_Ordner,ordner_name,text,Google-Drive-Ordnername
+Drive_Ordner,ordner_id,text,Google-Drive-Ordner-ID
+Drive_Ordner,ordner_url,url,Google-Drive-Ordner-URL

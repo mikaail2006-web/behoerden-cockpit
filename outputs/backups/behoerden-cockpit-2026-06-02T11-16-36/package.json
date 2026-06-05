@@ -1,0 +1,18 @@
+{
+  "name": "behoerden-cockpit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:portal": "node api/portal-access.test.mjs && node api/portal-env.test.mjs && node api/portal-contract.test.mjs && node api/portal-server.test.mjs",
+    "test:manifest": "node scripts/check-manifest.mjs",
+    "test:status": "node scripts/status-cockpit.test.mjs",
+    "test:setup": "node scripts/check-supabase-setup.mjs",
+    "test:secrets": "node scripts/check-secrets.mjs",
+    "backup": "node scripts/create-local-backup.mjs",
+    "status": "node scripts/status-cockpit.mjs",
+    "start:portal-demo": "node api/portal-server.example.mjs",
+    "check:app": "node --check app/app.js",
+    "check": "node scripts/check-cockpit.mjs"
+  }
+}

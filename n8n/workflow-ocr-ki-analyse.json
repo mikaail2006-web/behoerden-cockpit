@@ -1,0 +1,303 @@
+{
+  "name": "Behörden-Cockpit OCR KI Analyse",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "document-analysis",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-document-analysis",
+      "name": "Webhook Dokument-Analyse",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -920,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body || $json;\nconst documentId = body.documentId || `DOC-${Date.now()}`;\nconst fileName = body.fileName || body.normalizedFileName || 'Dokument.pdf';\nconst area = body.area || 'Unsortiert';\nconst documentType = body.documentType || 'Dokument';\nconst caseId = body.caseId || '';\nconst extractedText = body.extractedText || body.text || 'OCR_TEXT_HIER_EINFUEGEN_ODER_OCR_NODE_VORSCHALTEN';\n\nconst prompt = `Du bist ein deutscher Behörden-Assistenzanalyst. Analysiere das Dokument sachlich und ohne Rechtsberatung. Trenne sichere Fakten von Vermutungen. Gib ausschließlich JSON zurück.\n\nSchema:\n{\n  \"summary\": \"kurze Zusammenfassung\",\n  \"risk\": \"niedrig|mittel|hoch|kritisch\",\n  \"authority\": \"erkannte Behörde oder leer\",\n  \"referenceNumber\": \"Aktenzeichen oder leer\",\n  \"deadlineDate\": \"YYYY-MM-DD oder leer\",\n  \"deadlineTitle\": \"Titel der Frist oder leer\",\n  \"missingEvidence\": [\"fehlender Nachweis\"],\n  \"tasks\": [\"konkrete Aufgabe\"],\n  \"nextStep\": \"nächster sinnvoller Schritt\",\n  \"findings\": [\"wichtige Beobachtung\"]\n}\n\nDokument:\nBereich: ${area}\nTyp: ${documentType}\nDateiname: ${fileName}\nText:\n${extractedText}`;\n\nreturn [{\n  json: {\n    documentId,\n    fileName,\n    area,\n    documentType,\n    caseId,\n    extractedText,\n    prompt,\n    analysisDate: new Date().toISOString().slice(0, 10),\n    sheetId: '1FEnhO0S8fZzzoEKbXVLyX6mn6Su25GIZ4bJbtwd3eks'\n  }\n}];"
+      },
+      "id": "prepare-ai-analysis",
+      "name": "Analyse vorbereiten",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -680,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.example-ai-provider.test/v1/analyze",
+        "authentication": "predefinedCredentialType",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ {\n  model: 'REPLACE_WITH_MODEL',\n  input: $('Analyse vorbereiten').item.json.prompt,\n  response_format: { type: 'json_object' }\n} }}",
+        "options": {}
+      },
+      "id": "call-ai-analysis",
+      "name": "KI Analyse aufrufen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -440,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_WITH_AI_API_CREDENTIAL_ID",
+          "name": "AI API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Analyse vorbereiten').item.json;\nconst raw = $json.output_text || $json.text || $json.content || $json.message || $json;\nlet parsed;\n\ntry {\n  parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;\n} catch (error) {\n  parsed = {\n    summary: String(raw).slice(0, 500),\n    risk: 'mittel',\n    authority: '',\n    referenceNumber: '',\n    deadlineDate: '',\n    deadlineTitle: '',\n    missingEvidence: [],\n    tasks: ['KI-Ergebnis manuell prüfen'],\n    nextStep: 'Analyseergebnis prüfen und Fristen manuell abgleichen.',\n    findings: ['KI-Antwort konnte nicht vollständig als JSON gelesen werden']\n  };\n}\n\nconst riskMap = {\n  niedrig: 'low',\n  mittel: 'medium',\n  hoch: 'high',\n  kritisch: 'critical'\n};\nconst risk = String(parsed.risk || 'mittel').toLowerCase();\nconst escalation = riskMap[risk] || 'medium';\nconst analysisId = `AN-${Date.now()}`;\nconst deadlineId = `F-${Date.now()}`;\nconst taskId = `A-${Date.now()}`;\nconst primaryTask = Array.isArray(parsed.tasks) && parsed.tasks.length ? parsed.tasks[0] : parsed.nextStep || 'Dokument prüfen';\nconst findings = Array.isArray(parsed.findings) ? parsed.findings : [];\nconst missingEvidence = Array.isArray(parsed.missingEvidence) ? parsed.missingEvidence : [];\n\nreturn [{\n  json: {\n    ...base,\n    analysisId,\n    deadlineId,\n    taskId,\n    summary: parsed.summary || 'Dokument wurde analysiert.',\n    risk: risk || 'mittel',\n    escalation,\n    authority: parsed.authority || '',\n    referenceNumber: parsed.referenceNumber || '',\n    deadlineDate: parsed.deadlineDate || '',\n    deadlineTitle: parsed.deadlineTitle || `${base.documentType} Frist prüfen`,\n    primaryTask,\n    nextStep: parsed.nextStep || primaryTask,\n    findings: [...findings, ...missingEvidence.map((item) => `Fehlender Nachweis: ${item}`)]\n  }\n}];"
+      },
+      "id": "normalize-ai-analysis",
+      "name": "KI Ergebnis normalisieren",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1FEnhO0S8fZzzoEKbXVLyX6mn6Su25GIZ4bJbtwd3eks",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "KI_Analysen",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "analyse_id": "={{ $json.analysisId }}",
+            "dokument_id": "={{ $json.documentId }}",
+            "dokument_name": "={{ $json.fileName }}",
+            "zusammenfassung": "={{ $json.summary }}",
+            "risiko": "={{ $json.risk }}",
+            "naechster_schritt": "={{ $json.nextStep }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "append-ai-row",
+      "name": "KI Analyse schreiben",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        40,
+        -160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1FEnhO0S8fZzzoEKbXVLyX6mn6Su25GIZ4bJbtwd3eks",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Fristen",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Fristdatum": "={{ $json.deadlineDate }}",
+            "Fristtitel": "={{ $json.deadlineTitle }}",
+            "Bereich": "={{ $json.area }}",
+            "BehoerdeName": "={{ $json.authority || '' }}",
+            "VorgangsID": "={{ $json.caseId }}",
+            "Telefon": "",
+            "Email": "",
+            "ErinnerungsTage": "7",
+            "Status": "Offen",
+            "NaechsterSchritt": "={{ $json.nextStep }}",
+            "Anmerkungen": "={{ $json.fileName }}",
+            "": "",
+            "LetzteErinnerung": ""
+          }
+        },
+        "options": {}
+      },
+      "id": "append-deadline-row",
+      "name": "Frist schreiben",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        40,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1FEnhO0S8fZzzoEKbXVLyX6mn6Su25GIZ4bJbtwd3eks",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Aufgaben",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "aufgabe_id": "={{ $json.taskId }}",
+            "vorgang_id": "={{ $json.caseId }}",
+            "titel": "={{ $json.primaryTask }}",
+            "bereich": "={{ $json.area }}",
+            "faelligkeit": "={{ $json.deadlineDate || $json.analysisDate }}",
+            "prioritaet": "={{ $json.escalation }}",
+            "status": "Offen"
+          }
+        },
+        "options": {}
+      },
+      "id": "append-task-row",
+      "name": "Aufgabe schreiben",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4,
+      "position": [
+        40,
+        160
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_WITH_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets OAuth2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\n  title: 'KI-Analyse abgeschlossen: ' + $('KI Ergebnis normalisieren').item.json.fileName,\n  fileName: $('KI Ergebnis normalisieren').item.json.fileName,\n  risk: $('KI Ergebnis normalisieren').item.json.risk,\n  summary: $('KI Ergebnis normalisieren').item.json.summary,\n  findings: $('KI Ergebnis normalisieren').item.json.findings,\n  nextStep: $('KI Ergebnis normalisieren').item.json.nextStep,\n  deadlineDate: $('KI Ergebnis normalisieren').item.json.deadlineDate,\n  authority: $('KI Ergebnis normalisieren').item.json.authority,\n  referenceNumber: $('KI Ergebnis normalisieren').item.json.referenceNumber\n} }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "respond-analysis",
+      "name": "Antwort an Cockpit",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        300,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Dokument-Analyse": {
+      "main": [
+        [
+          {
+            "node": "Analyse vorbereiten",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyse vorbereiten": {
+      "main": [
+        [
+          {
+            "node": "KI Analyse aufrufen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KI Analyse aufrufen": {
+      "main": [
+        [
+          {
+            "node": "KI Ergebnis normalisieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KI Ergebnis normalisieren": {
+      "main": [
+        [
+          {
+            "node": "KI Analyse schreiben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "KI Analyse schreiben": {
+      "main": [
+        [
+          {
+            "node": "Frist schreiben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Frist schreiben": {
+      "main": [
+        [
+          {
+            "node": "Aufgabe schreiben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aufgabe schreiben": {
+      "main": [
+        [
+          {
+            "node": "Antwort an Cockpit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false
+}

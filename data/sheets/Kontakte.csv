@@ -1,0 +1,4 @@
+kontakt_id,organisation,ansprechpartner,bereich,typ,email,telefon
+K-001,Deutsche Rentenversicherung,Sachbearbeitung EM-Rente,EM-Rente,Behörde,kontakt@drv.example,0800 1000 4800
+K-002,Pflegekasse,Leistungsabteilung Pflege,Pflegegrad 2,Kasse,pflegekasse@example.de,
+K-003,Neurologische Praxis,Praxis-Team,Arztberichte,Praxis,praxis@example.de,0211 000000

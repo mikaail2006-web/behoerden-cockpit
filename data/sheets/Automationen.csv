@@ -1,0 +1,4 @@
+automation_id,name,status,beschreibung,last_run
+AUTO-001,Drive Dokumenteingang,active,Neue Dateien klassifizieren analysieren und in den richtigen Ordner verschieben.,Heute 08:14
+AUTO-002,Tägliche Fristenprüfung,active,Offene Fristen aus Google Sheets prüfen und Erinnerungen versenden.,Heute 08:00
+AUTO-003,Portal Upload,info,Uploads aus dem Kundenportal als Drive-Eingang erfassen.,Bereit
