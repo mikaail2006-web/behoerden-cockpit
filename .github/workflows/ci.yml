@@ -20,20 +20,44 @@ jobs:
         with:
           node-version: '20'
 
-      - name: App-Syntax pruefen
+      - name: App-Syntax pruefen (Pflicht)
         run: node --check app/app.js
 
-      - name: Vollstaendiger Cockpit-Check
-        run: node scripts/check-cockpit.mjs
+      - name: App-Inhalte pruefen (Pflicht)
+        run: node scripts/check-app-content.mjs
 
-      - name: Portal-Tests
-        run: |
-          node api/portal-access.test.mjs
-          node api/portal-env.test.mjs
-          node api/portal-contract.test.mjs
+      - name: Portal-Zugriff pruefen (Pflicht)
+        run: node api/portal-access.test.mjs
 
-      - name: Manifest-Check
-        run: node scripts/check-manifest.mjs
+      - name: Portal-Kontext pruefen (Pflicht)
+        run: node api/portal-context.test.mjs
 
-      - name: Secret-Scan
+      - name: Portal-Contract pruefen (Pflicht)
+        run: node api/portal-contract.test.mjs
+
+      - name: Portal-Env pruefen (Pflicht)
+        run: node api/portal-env.test.mjs
+
+      - name: n8n Workflows pruefen (Pflicht)
+        run: node scripts/check-n8n-workflows.mjs
+
+      - name: Secret-Scan (Pflicht)
         run: node scripts/check-secrets.mjs
+
+      - name: Package-Scripts pruefen (Pflicht)
+        run: node scripts/check-package-scripts.mjs
+
+      - name: Docs pruefen (Pflicht)
+        run: node scripts/check-docs.mjs
+
+      - name: Manifest-Check (optional - prueft lokale Dateien)
+        run: node scripts/check-manifest.mjs
+        continue-on-error: true
+
+      - name: Datei-Referenzen pruefen (optional)
+        run: node scripts/check-file-references.mjs
+        continue-on-error: true
+
+      - name: Supabase-Setup pruefen (optional - prueft lokale Env)
+        run: node scripts/check-supabase-setup.mjs
+        continue-on-error: true
