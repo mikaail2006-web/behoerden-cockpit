@@ -1,0 +1,39 @@
+name: CI - Behoerden Cockpit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    name: Syntax und Portal-Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v4
+
+      - name: Node.js einrichten
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: App-Syntax pruefen
+        run: node --check app/app.js
+
+      - name: Vollstaendiger Cockpit-Check
+        run: node scripts/check-cockpit.mjs
+
+      - name: Portal-Tests
+        run: |
+          node api/portal-access.test.mjs
+          node api/portal-env.test.mjs
+          node api/portal-contract.test.mjs
+
+      - name: Manifest-Check
+        run: node scripts/check-manifest.mjs
+
+      - name: Secret-Scan
+        run: node scripts/check-secrets.mjs
